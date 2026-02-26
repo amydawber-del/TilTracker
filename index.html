@@ -6,21 +6,25 @@
 <title>TiL Tracker — Product Training</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
 :root {
-  --text--dark--50:#19191e;--brand--black:#242326;--text--dark--40:#4c4d57;
+  --text--dark--50:#19191e;--brand--black:#1a1a20;--text--dark--40:#4c4d57;
   --text--dark--30:#777989;--card-light-grey:#f8f8f8;--text--light--40:#b2b2b2;
   --accent--blue--300:#527dff;--text--dark--20:#a8aabb;--action-primary-blue:#2147f4;
-  --light-grey:#ccc;--text-dark-10:#dfe0ec;--ui--underline--light-grey:#e5e5e5;
+  --light-grey:#d8d8e0;--text-dark-10:#dfe0ec;--ui--underline--light-grey:#e8e8f0;
   --success-green:#bde4b9;--brand--yellow:#f1c238;--brand-accent--mandarin-light:#f6be9d;
   --accent-blue--100:#a3baff;--brand-accent--dusty-red-light:#f9b4bc;
   --brand--secondary--lightgreen:#beffd8;--accent-blue--50:#b8caff;
   --white-smoke:#fde8eb;--brand-accent--cream:#f5ede5;
+  --font: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;font-size:14px;line-height:20px;color:#333;background:#fff;min-height:100vh;}
+body{font-family:var(--font);font-size:14px;line-height:20px;color:#333;background:#f4f4f8;min-height:100vh;}
 
 /* ── HEADER ── */
-header{background:var(--brand--black);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,0.08);}
+header{background:var(--brand--black);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,255,255,0.06);}
 .hdr-left{display:flex;align-items:center;gap:12px;}
 .hdr-logo{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.01em;}
 .hdr-logo span{color:var(--brand--yellow);}
@@ -30,8 +34,8 @@ header{background:var(--brand--black);height:56px;display:flex;align-items:cente
 
 /* hamburger */
 .hmb-wrap{position:relative;flex-shrink:0;}
-.hmb-btn{display:flex;flex-direction:column;justify-content:center;align-items:center;width:36px;height:36px;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);border-radius:6px;cursor:pointer;gap:4px;transition:background .15s;outline:none;}
-.hmb-btn:hover{background:rgba(255,255,255,.28);}
+.hmb-btn{display:flex;flex-direction:column;justify-content:center;align-items:center;width:36px;height:36px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.25);border-radius:6px;cursor:pointer;gap:4px;transition:background .15s;outline:none;}
+.hmb-btn:hover{background:rgba(255,255,255,.18);}
 .hmb-btn .bar{display:block;width:16px;height:2px;background:#fff;border-radius:2px;transition:all .2s ease;}
 .hmb-btn.open .bar:nth-child(1){transform:translateY(6px) rotate(45deg);}
 .hmb-btn.open .bar:nth-child(2){opacity:0;width:0;}
@@ -39,7 +43,7 @@ header{background:var(--brand--black);height:56px;display:flex;align-items:cente
 .nav-menu{display:none;position:absolute;top:calc(100% + 8px);left:0;background:#fff;border:1px solid #e5e5e5;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.16);min-width:220px;z-index:9999;overflow:hidden;}
 .nav-menu.open{display:block;}
 .nav-menu-hdr{padding:10px 14px 8px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#a8aabb;border-bottom:1px solid #e5e5e5;background:#f8f8f8;}
-.nav-menu a{display:flex;align-items:center;gap:10px;padding:11px 14px;text-decoration:none;color:#4c4d57;font-size:13px;font-weight:600;border-bottom:1px solid #e5e5e5;background:#fff;}
+.nav-menu a{display:flex;align-items:center;gap:10px;padding:11px 14px;text-decoration:none;color:#4c4d57;font-family:var(--font);font-size:13px;font-weight:600;border-bottom:1px solid #e5e5e5;background:#fff;}
 .nav-menu a:last-child{border-bottom:none;}
 .nav-menu a:hover{background:#f8f8f8;color:#19191e;}
 .nav-menu a.active{background:#f0f4ff;color:var(--action-primary-blue);}
@@ -47,17 +51,23 @@ header{background:var(--brand--black);height:56px;display:flex;align-items:cente
 .nav-icon.blue{background:#dce6ff;}
 .nav-icon.green{background:#d0f5e2;}
 
+/* ── ROLE BADGE ── */
+.role-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.role-admin{background:#fde8c8;color:#8a4a00;border:1px solid #fac87a;}
+.role-manager{background:#dce6ff;color:#1239a0;border:1px solid #a3baff;}
+.role-trainer{background:#d0f5e2;color:#1a5c38;border:1px solid #8fd4a8;}
+.role-viewer{background:#f0f0f0;color:#666;border:1px solid #ccc;}
+
 /* ── LOGIN SCREEN ── */
 .login-screen{position:fixed;inset:0;background:var(--brand--black);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
 .login-screen.hidden{display:none;}
 .login-logo{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.01em;margin-bottom:32px;}
 .login-logo span{color:var(--brand--yellow);}
-.login-card{background:#fff;border-radius:12px;padding:32px 28px;width:100%;max-width:360px;box-shadow:0 16px 48px rgba(0,0,0,.4);}
+.login-card{background:#fff;border-radius:14px;padding:32px 28px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
 .login-welcome{font-size:20px;font-weight:700;color:var(--text--dark--50);margin-bottom:4px;}
 .login-sub{font-size:13px;color:var(--text--dark--30);margin-bottom:20px;}
-/* name search */
 .name-search-wrap{position:relative;}
-.name-search-input{width:100%;border:1.5px solid var(--light-grey);border-radius:8px;padding:10px 14px;font-family:Arial,sans-serif;font-size:14px;color:var(--text--dark--50);outline:none;transition:border-color .15s,box-shadow .15s;}
+.name-search-input{width:100%;border:1.5px solid var(--light-grey);border-radius:8px;padding:10px 14px;font-family:var(--font);font-size:14px;color:var(--text--dark--50);outline:none;transition:border-color .15s,box-shadow .15s;}
 .name-search-input:focus{border-color:var(--accent--blue--300);box-shadow:0 0 0 3px var(--accent-blue--50);}
 .name-suggestions{display:none;position:absolute;top:calc(100%+4px);left:0;right:0;background:#fff;border:1px solid var(--ui--underline--light-grey);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:10;overflow:hidden;margin-top:4px;}
 .name-suggestions.open{display:block;}
@@ -66,36 +76,34 @@ header{background:var(--brand--black);height:56px;display:flex;align-items:cente
 .name-suggestion-item:hover,.name-suggestion-item.active{background:#f0f4ff;color:var(--action-primary-blue);}
 .suggestion-avatar{width:28px;height:28px;border-radius:50%;background:var(--text-dark-10);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text--dark--40);flex-shrink:0;}
 .no-match{padding:12px 14px;font-size:13px;color:var(--text--dark--30);text-align:center;}
-/* PIN pad */
-.pin-display{display:flex;justify-content:center;gap:10px;margin:16px 0 20px;}
-.pin-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--light-grey);background:transparent;transition:all .15s;}
+
+/* PIN pad — numbers only, clean */
+.pin-display{display:flex;justify-content:center;gap:12px;margin:16px 0 20px;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--light-grey);background:transparent;transition:all .15s;}
 .pin-dot.filled{background:var(--action-primary-blue);border-color:var(--action-primary-blue);}
 .pin-dot.error{border-color:#c0392b;background:#c0392b;}
 .pin-error-msg{text-align:center;font-size:12px;color:#c0392b;font-weight:600;min-height:18px;margin-bottom:8px;}
 .numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
-.num-btn{padding:15px 10px;border:1.5px solid var(--ui--underline--light-grey);border-radius:8px;background:#fff;font-family:Arial,sans-serif;font-size:18px;font-weight:700;color:var(--text--dark--50);cursor:pointer;transition:all .1s;text-align:center;line-height:1;}
+.num-btn{padding:16px 10px;border:1.5px solid var(--ui--underline--light-grey);border-radius:8px;background:#fff;font-family:var(--font-mono);font-size:20px;font-weight:600;color:var(--text--dark--50);cursor:pointer;transition:all .1s;text-align:center;line-height:1;}
 .num-btn:hover{background:var(--card-light-grey);border-color:var(--text--dark--20);}
 .num-btn:active{background:var(--text-dark-10);transform:scale(.95);}
-.num-btn.sub-label{font-size:9px;color:var(--text--dark--30);letter-spacing:.05em;display:block;margin-top:2px;font-weight:400;}
 .num-btn.zero{grid-column:2;}
-.num-btn.backspace{font-size:20px;color:var(--text--dark--30);}
-/* login footer buttons */
+.num-btn.backspace{font-size:18px;color:var(--text--dark--30);}
 .login-btn-row{display:flex;gap:8px;margin-top:4px;}
-.login-btn{flex:1;padding:10px;border-radius:8px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s;}
+.login-btn{flex:1;padding:10px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s;}
 .login-btn.back{background:var(--card-light-grey);color:var(--text--dark--40);border:1px solid var(--ui--underline--light-grey);}
 .login-btn.back:hover{background:var(--text-dark-10);}
 .login-btn.continue{background:var(--action-primary-blue);color:#fff;}
 .login-btn.continue:hover{background:#1839d4;}
 .login-btn.continue:disabled{background:var(--text--dark--20);cursor:not-allowed;}
+
 /* ── HEADER USER PILL ── */
 .hdr-user{display:flex;align-items:center;gap:8px;}
 .hdr-user-pill{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 5px;border-radius:20px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);}
 .hdr-user-avatar{width:26px;height:26px;border-radius:50%;background:var(--accent--blue--300);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
 .hdr-user-name{font-size:13px;font-weight:600;color:#fff;}
-.hdr-signout{font-size:12px;color:var(--text--dark--20);background:none;border:1px solid rgba(255,255,255,.12);cursor:pointer;padding:4px 10px;border-radius:4px;transition:all .15s;font-family:Arial,sans-serif;}
+.hdr-signout{font-size:12px;color:var(--text--dark--20);background:none;border:1px solid rgba(255,255,255,.12);cursor:pointer;padding:4px 10px;border-radius:4px;transition:all .15s;font-family:var(--font);}
 .hdr-signout:hover{color:#fff;border-color:rgba(255,255,255,.3);}
-
-/* sync badge */
 .sync-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,.08);color:var(--text--dark--20);}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:#ccc;flex-shrink:0;}
 .sync-dot.ok{background:#4caf50;}
@@ -103,8 +111,14 @@ header{background:var(--brand--black);height:56px;display:flex;align-items:cente
 .sync-dot.error{background:#e53935;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
+/* ── VIEW TABS (My TiL / All Trainers) ── */
+.view-tabs{display:flex;gap:4px;margin-bottom:22px;}
+.view-tab{padding:7px 18px;border-radius:8px;font-size:13px;font-weight:700;border:1.5px solid var(--ui--underline--light-grey);background:#fff;cursor:pointer;color:var(--text--dark--30);font-family:var(--font);transition:all .15s;display:flex;align-items:center;gap:6px;}
+.view-tab.active{background:var(--text--dark--50);color:#fff;border-color:var(--text--dark--50);}
+.view-tab:hover:not(.active){background:var(--card-light-grey);color:var(--text--dark--50);}
+
 /* ── LAYOUT ── */
-.page{max-width:1280px;margin:0 auto;padding:28px 24px 60px;}
+.page{max-width:1360px;margin:0 auto;padding:28px 24px 60px;}
 
 /* ── PAGE TITLE ── */
 .page-title-row{margin-bottom:22px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;}
@@ -113,9 +127,9 @@ header{background:var(--brand--black);height:56px;display:flex;align-items:cente
 
 /* ── KPI ROW ── */
 .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
-.kpi-card{background:var(--card-light-grey);border:1px solid var(--ui--underline--light-grey);border-radius:8px;padding:16px 18px;}
+.kpi-card{background:#fff;border:1px solid var(--ui--underline--light-grey);border-radius:10px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
 .kpi-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text--dark--30);margin-bottom:7px;}
-.kpi-value{font-size:26px;font-weight:700;line-height:1;letter-spacing:-.02em;}
+.kpi-value{font-size:26px;font-weight:700;line-height:1;letter-spacing:-.02em;font-family:var(--font-mono);}
 .kpi-value.blue{color:var(--action-primary-blue);}
 .kpi-value.green{color:#2a7d3f;}
 .kpi-value.red{color:#c0392b;}
@@ -123,12 +137,12 @@ header{background:var(--brand--black);height:56px;display:flex;align-items:cente
 .kpi-value.amber{color:#a0600a;}
 .kpi-sub{font-size:11px;color:var(--text--dark--30);margin-top:4px;}
 
-/* ── GRID ── */
-.main-grid{display:grid;grid-template-columns:1fr 380px;gap:14px;margin-bottom:14px;}
-@media(max-width:960px){.main-grid{grid-template-columns:1fr;}.kpi-row{grid-template-columns:1fr 1fr;}}
+/* ── MAIN GRID ── */
+.main-grid{display:grid;grid-template-columns:1fr 400px;gap:14px;margin-bottom:14px;}
+@media(max-width:1000px){.main-grid{grid-template-columns:1fr;}.kpi-row{grid-template-columns:1fr 1fr;}}
 
 /* ── CARD ── */
-.card{background:#fff;border:1px solid var(--ui--underline--light-grey);border-radius:8px;padding:22px 24px;}
+.card{background:#fff;border:1px solid var(--ui--underline--light-grey);border-radius:10px;padding:22px 24px;box-shadow:0 1px 4px rgba(0,0,0,.04);}
 .card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--ui--underline--light-grey);}
 .card-title{font-size:14px;font-weight:700;color:var(--text--dark--50);}
 .card-meta{font-size:12px;color:var(--text--dark--30);}
@@ -137,45 +151,47 @@ header{background:var(--brand--black);height:56px;display:flex;align-items:cente
 /* ── FORM ── */
 .form-row{margin-bottom:11px;}
 .form-row label{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text--dark--40);margin-bottom:4px;}
-.form-row input,.form-row select,.form-row textarea{width:100%;border:1px solid var(--light-grey);border-radius:6px;padding:7px 10px;font-family:Arial,sans-serif;font-size:13px;color:var(--text--dark--50);background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;line-height:20px;}
+.form-row input,.form-row select,.form-row textarea{width:100%;border:1.5px solid var(--light-grey);border-radius:6px;padding:7px 10px;font-family:var(--font);font-size:13px;color:var(--text--dark--50);background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;line-height:20px;}
 .form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent--blue--300);box-shadow:0 0 0 3px var(--accent-blue--50);}
 .form-row input[readonly]{background:var(--card-light-grey);color:var(--text--dark--30);cursor:default;}
 .form-row textarea{resize:vertical;min-height:52px;}
 .form-hint{font-size:11px;color:var(--text--dark--30);margin-top:3px;}
 .form-2col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.form-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* Fixed 3-col for date/time - date gets more space */
+.form-time-row{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;margin-bottom:11px;}
+.form-time-row label{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text--dark--40);margin-bottom:4px;}
+.form-time-row input{width:100%;border:1.5px solid var(--light-grey);border-radius:6px;padding:7px 8px;font-family:var(--font);font-size:12px;color:var(--text--dark--50);background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;line-height:20px;}
+.form-time-row input:focus{border-color:var(--accent--blue--300);box-shadow:0 0 0 3px var(--accent-blue--50);}
 
 /* type toggle */
-.type-toggle{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--light-grey);border-radius:6px;overflow:hidden;margin-bottom:14px;}
-.type-toggle button{padding:9px 10px;border:none;border-right:1px solid var(--light-grey);cursor:pointer;font-family:Arial,sans-serif;font-size:13px;font-weight:700;background:#fff;color:var(--text--dark--30);transition:all .15s;}
+.type-toggle{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--light-grey);border-radius:8px;overflow:hidden;margin-bottom:14px;}
+.type-toggle button{padding:9px 10px;border:none;border-right:1.5px solid var(--light-grey);cursor:pointer;font-family:var(--font);font-size:13px;font-weight:700;background:#fff;color:var(--text--dark--30);transition:all .15s;}
 .type-toggle button:last-child{border-right:none;}
 .type-toggle button.active.earned{background:var(--brand--secondary--lightgreen);color:#1a6632;}
 .type-toggle button.active.taken{background:var(--white-smoke);color:#9e2a35;}
-
 .section-divider{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text--dark--30);margin:14px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--ui--underline--light-grey);}
-
 .flag-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
 .flag-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid var(--ui--underline--light-grey);background:#fff;color:var(--text--dark--30);}
 .flag-chip.bh{background:#fef9c3;border-color:#fde047;color:#854d0e;}
 .flag-chip.we{background:var(--accent-blue--50);border-color:var(--accent--blue--300);color:#1d4ed8;}
 
 /* preview box */
-.til-preview-box{background:var(--card-light-grey);border-radius:6px;padding:12px 14px;margin-bottom:12px;}
+.til-preview-box{background:var(--card-light-grey);border-radius:8px;padding:12px 14px;margin-bottom:12px;border:1px solid var(--ui--underline--light-grey);}
 .til-preview-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text--dark--30);}
-.til-preview-value{font-size:22px;font-weight:700;color:#2a7d3f;margin:4px 0 2px;}
+.til-preview-value{font-size:22px;font-weight:700;color:#2a7d3f;margin:4px 0 2px;font-family:var(--font-mono);}
 .til-preview-breakdown{font-size:11px;color:var(--text--dark--30);}
 .til-preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-top:8px;}
 .til-preview-row{display:flex;justify-content:space-between;font-size:11px;}
 .til-preview-row span:first-child{color:var(--text--dark--30);}
-.til-preview-row span:last-child{font-weight:700;color:var(--text--dark--50);}
+.til-preview-row span:last-child{font-weight:700;color:var(--text--dark--50);font-family:var(--font-mono);}
 
-/* checkboxes */
 .check-row{display:flex;gap:16px;margin-bottom:11px;}
 .check-label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text--dark--40);}
 .check-label input[type=checkbox]{accent-color:var(--action-primary-blue);width:14px;height:14px;cursor:pointer;}
 
 /* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:6px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s;line-height:20px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:6px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s;line-height:20px;}
 .btn-primary{background:var(--action-primary-blue);color:#fff;width:100%;padding:10px;}
 .btn-primary:hover{background:#1839d4;}
 .btn-primary:disabled{background:var(--text--dark--20);cursor:not-allowed;}
@@ -184,12 +200,12 @@ header{background:var(--brand--black);height:56px;display:flex;align-items:cente
 .btn-ghost:hover{background:var(--card-light-grey);color:#333;}
 .btn-approve{background:var(--brand--secondary--lightgreen);color:#1a6632;border:1px solid #8fd4a8;font-weight:700;}
 .btn-approve:hover{background:#a3f0be;}
-.btn-delete{background:none;border:1px solid var(--ui--underline--light-grey);color:var(--text--dark--20);padding:4px 10px;border-radius:5px;font-size:12px;cursor:pointer;font-family:Arial,sans-serif;transition:all .15s;}
+.btn-delete{background:none;border:1px solid var(--ui--underline--light-grey);color:var(--text--dark--20);padding:4px 10px;border-radius:5px;font-size:12px;cursor:pointer;font-family:var(--font);transition:all .15s;}
 .btn-delete:hover{border-color:#f9b4bc;color:#c0392b;background:var(--white-smoke);}
 
 /* ── FILTER TABS ── */
 .filter-tabs{display:flex;gap:4px;}
-.filter-tab{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid var(--ui--underline--light-grey);background:#fff;cursor:pointer;color:var(--text--dark--30);font-family:Arial,sans-serif;transition:all .15s;}
+.filter-tab{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid var(--ui--underline--light-grey);background:#fff;cursor:pointer;color:var(--text--dark--30);font-family:var(--font);transition:all .15s;}
 .filter-tab.active{background:var(--text--dark--50);color:#fff;border-color:var(--text--dark--50);}
 
 /* ── TABLE ── */
@@ -199,7 +215,7 @@ thead tr{background:var(--card-light-grey);}
 th{padding:9px 12px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text--dark--30);text-align:left;border-bottom:1px solid var(--ui--underline--light-grey);white-space:nowrap;}
 td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--ui--underline--light-grey);color:var(--text--dark--40);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
-tbody tr:hover td{background:var(--card-light-grey);}
+tbody tr:hover td{background:#fafafa;}
 .td-actions{display:flex;gap:6px;align-items:center;}
 
 /* ── BADGES ── */
@@ -208,26 +224,38 @@ tbody tr:hover td{background:var(--card-light-grey);}
 .badge-taken{background:var(--white-smoke);color:#9e2a35;}
 .badge-approved{background:var(--success-green);color:#1a6632;font-size:10px;padding:2px 8px;}
 .badge-pending{background:var(--brand-accent--cream);color:#8a5a20;font-size:10px;padding:2px 8px;}
-.hours-pos{color:#2a7d3f;font-weight:700;}
-.hours-neg{color:#c0392b;font-weight:700;}
+.hours-pos{color:#2a7d3f;font-weight:700;font-family:var(--font-mono);}
+.hours-neg{color:#c0392b;font-weight:700;font-family:var(--font-mono);}
 .approval-meta{font-size:11px;color:var(--text--dark--30);margin-top:2px;}
-
-/* ── EMPTY STATE ── */
 .empty-state{text-align:center;padding:48px 20px;color:var(--text--dark--30);font-size:13px;}
 .empty-icon{font-size:28px;margin-bottom:10px;}
+
+/* ── ADMIN ALL-TRAINERS VIEW ── */
+.admin-panel{display:none;}
+.admin-panel.visible{display:block;}
+.trainer-summary-table tbody tr{cursor:pointer;transition:background .12s;}
+.trainer-summary-table tbody tr:hover td{background:#f0f4ff;}
+.trainer-summary-table tbody tr.selected td{background:#f0f4ff;font-weight:600;}
+.trainer-name-cell{display:flex;align-items:center;gap:8px;}
+.trainer-avatar{width:30px;height:30px;border-radius:50%;background:var(--text-dark-10);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text--dark--40);flex-shrink:0;}
+.trainer-detail-header{display:flex;align-items:center;justify-content:space-between;margin:18px 0 14px;}
+.trainer-detail-title{font-size:16px;font-weight:700;color:var(--text--dark--50);}
+.pending-alert{background:#fffbeb;border:1px solid #fde047;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;color:#854d0e;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.admin-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.admin-kpi-card{background:var(--card-light-grey);border:1px solid var(--ui--underline--light-grey);border-radius:8px;padding:12px 14px;}
 
 /* ── MODAL ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal{background:#fff;border-radius:10px;padding:28px;width:380px;box-shadow:0 8px 40px rgba(0,0,0,.18);animation:modalIn .18s ease;}
+.modal{background:#fff;border-radius:12px;padding:28px;width:380px;box-shadow:0 8px 40px rgba(0,0,0,.18);animation:modalIn .18s ease;}
 @keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
 .modal-title{font-size:16px;font-weight:700;color:var(--text--dark--50);margin-bottom:6px;}
 .modal-sub{font-size:13px;color:var(--text--dark--30);margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--ui--underline--light-grey);}
 .approver-list{display:flex;flex-direction:column;gap:7px;margin-bottom:18px;}
-.approver-btn{padding:10px 14px;border:1px solid var(--ui--underline--light-grey);border-radius:6px;background:#fff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;color:var(--text--dark--40);cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;gap:10px;}
+.approver-btn{padding:10px 14px;border:1px solid var(--ui--underline--light-grey);border-radius:6px;background:#fff;font-family:var(--font);font-size:13px;font-weight:700;color:var(--text--dark--40);cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;gap:10px;}
 .approver-btn:hover{border-color:var(--accent--blue--300);background:#f5f8ff;color:var(--action-primary-blue);}
 .approver-avatar{width:30px;height:30px;border-radius:50%;background:var(--text-dark-10);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text--dark--40);flex-shrink:0;}
-.modal-cancel{width:100%;padding:8px;background:none;border:1px solid var(--ui--underline--light-grey);border-radius:6px;font-family:Arial,sans-serif;font-size:13px;color:var(--text--dark--30);cursor:pointer;transition:background .15s;}
+.modal-cancel{width:100%;padding:8px;background:none;border:1px solid var(--ui--underline--light-grey);border-radius:6px;font-family:var(--font);font-size:13px;color:var(--text--dark--30);cursor:pointer;transition:background .15s;}
 .modal-cancel:hover{background:var(--card-light-grey);}
 
 /* ── TOAST ── */
@@ -236,6 +264,9 @@ tbody tr:hover td{background:var(--card-light-grey);}
 .toast.success{border-left-color:#4caf50;}
 .toast.error{border-left-color:#e53935;}
 @keyframes slideIn{from{transform:translateX(16px);opacity:0}to{transform:none;opacity:1}}
+
+/* login status */
+#loginStatus{margin-bottom:14px;padding:10px 12px;border-radius:6px;background:#f8f8f8;border:1px solid #e5e5e5;font-size:12px;color:#4c4d57;display:flex;align-items:center;gap:8px;}
 </style>
 </head>
 <body>
@@ -249,27 +280,24 @@ tbody tr:hover td{background:var(--card-light-grey);}
     <div id="loginStep1">
       <div class="login-welcome">Welcome back</div>
       <div class="login-sub" id="loginSub1">Connecting to sheet…</div>
-
-      <!-- Diagnostic status strip — shown while loading / on error -->
-      <div id="loginStatus" style="margin-bottom:14px;padding:10px 12px;border-radius:6px;background:#f8f8f8;border:1px solid #e5e5e5;font-size:12px;color:#4c4d57;display:flex;align-items:center;gap:8px;">
+      <div id="loginStatus">
         <div id="loginStatusDot" style="width:8px;height:8px;border-radius:50%;background:#f1c238;flex-shrink:0;animation:pulse .8s ease infinite;"></div>
         <span id="loginStatusText">Connecting to Users sheet…</span>
       </div>
-
       <div class="name-search-wrap">
         <input class="name-search-input" id="nameSearchInput" type="text" placeholder="Your name" autocomplete="off"
           oninput="onNameSearch()" onfocus="onNameSearch()" disabled>
         <div class="name-suggestions" id="nameSuggestions"></div>
       </div>
       <div style="margin-top:16px;">
-        <button class="login-btn continue" id="continueBtn" onclick="goToPin()" disabled>Continue &#8594;</button>
+        <button class="login-btn continue" id="continueBtn" onclick="goToPin()" disabled>Continue →</button>
       </div>
     </div>
 
-    <!-- Step 2: PIN -->
+    <!-- Step 2: PIN — numbers only -->
     <div id="loginStep2" style="display:none;">
-      <div class="login-welcome" id="pinGreeting">Hi, Amy</div>
-      <div class="login-sub">Enter your PIN to continue</div>
+      <div class="login-welcome" id="pinGreeting">Hi, Amy 👋</div>
+      <div class="login-sub">Enter your 4-digit PIN</div>
       <div class="pin-display" id="pinDisplay">
         <div class="pin-dot" id="pd0"></div>
         <div class="pin-dot" id="pd1"></div>
@@ -278,30 +306,29 @@ tbody tr:hover td{background:var(--card-light-grey);}
       </div>
       <div class="pin-error-msg" id="pinError"></div>
       <div class="numpad">
-        <button class="num-btn" onclick="numpadPress('1')">1<span class="sub-label"></span></button>
-        <button class="num-btn" onclick="numpadPress('2')">2<span class="sub-label">ABC</span></button>
-        <button class="num-btn" onclick="numpadPress('3')">3<span class="sub-label">DEF</span></button>
-        <button class="num-btn" onclick="numpadPress('4')">4<span class="sub-label">GHI</span></button>
-        <button class="num-btn" onclick="numpadPress('5')">5<span class="sub-label">JKL</span></button>
-        <button class="num-btn" onclick="numpadPress('6')">6<span class="sub-label">MNO</span></button>
-        <button class="num-btn" onclick="numpadPress('7')">7<span class="sub-label">PQRS</span></button>
-        <button class="num-btn" onclick="numpadPress('8')">8<span class="sub-label">TUV</span></button>
-        <button class="num-btn" onclick="numpadPress('9')">9<span class="sub-label">WXYZ</span></button>
-        <button class="num-btn backspace" onclick="numpadPress('back')">&#8592;</button>
+        <button class="num-btn" onclick="numpadPress('1')">1</button>
+        <button class="num-btn" onclick="numpadPress('2')">2</button>
+        <button class="num-btn" onclick="numpadPress('3')">3</button>
+        <button class="num-btn" onclick="numpadPress('4')">4</button>
+        <button class="num-btn" onclick="numpadPress('5')">5</button>
+        <button class="num-btn" onclick="numpadPress('6')">6</button>
+        <button class="num-btn" onclick="numpadPress('7')">7</button>
+        <button class="num-btn" onclick="numpadPress('8')">8</button>
+        <button class="num-btn" onclick="numpadPress('9')">9</button>
+        <button class="num-btn backspace" onclick="numpadPress('back')">←</button>
         <button class="num-btn zero" onclick="numpadPress('0')">0</button>
       </div>
       <div class="login-btn-row">
-        <button class="login-btn back" onclick="backToName()">&#8592; Back</button>
+        <button class="login-btn back" onclick="backToName()">← Back</button>
       </div>
     </div>
-
   </div>
 </div>
 
 <!-- APPROVAL MODAL -->
 <div class="modal-overlay" id="approvalModal">
   <div class="modal">
-    <div class="modal-title">&#10003; Approve TiL Request</div>
+    <div class="modal-title">✓ Approve TiL Request</div>
     <div class="modal-sub">Select who is approving this time-off request:</div>
     <div class="approver-list" id="approverList"></div>
     <button class="modal-cancel" onclick="closeModal()">Cancel</button>
@@ -320,10 +347,10 @@ tbody tr:hover td{background:var(--card-light-grey);}
       <nav class="nav-menu" id="navMenu">
         <div class="nav-menu-hdr">Navigation</div>
         <a href="https://amydawber-del.github.io/TrainingOpsDashboard/">
-          <span class="nav-icon blue">&#128202;</span> Training Dashboard
+          <span class="nav-icon blue">📊</span> Training Dashboard
         </a>
         <a href="#" class="active" onclick="closeMenu();return false;">
-          <span class="nav-icon green">&#9201;</span> TiL Tracker
+          <span class="nav-icon green">⏱</span> TiL Tracker
         </a>
       </nav>
     </div>
@@ -335,14 +362,15 @@ tbody tr:hover td{background:var(--card-light-grey);}
   <div class="hdr-right">
     <div class="sync-badge" id="syncBadge">
       <div class="sync-dot" id="syncDot"></div>
-      <span id="syncLabel">Loading&#8230;</span>
+      <span id="syncLabel">Loading…</span>
     </div>
     <div class="hdr-user">
       <div class="hdr-user-pill">
         <div class="hdr-user-avatar" id="hdrAvatar">??</div>
-        <span class="hdr-user-name" id="hdrName">Loading&#8230;</span>
+        <span class="hdr-user-name" id="hdrName">Loading…</span>
       </div>
-      <button class="hdr-signout" onclick="signOut()">&#8618; Sign out</button>
+      <span id="hdrRoleBadge" style="display:none"></span>
+      <button class="hdr-signout" onclick="signOut()">⎋ Sign out</button>
     </div>
   </div>
 </header>
@@ -350,190 +378,261 @@ tbody tr:hover td{background:var(--card-light-grey);}
 <!-- PAGE -->
 <div class="page">
 
-  <div class="page-title-row">
-    <div>
-      <div class="page-title" id="pageTitle">Amy Dawber</div>
-      <div class="page-sub" id="pageSub">Time in Lieu balance — loading&#8230;</div>
-    </div>
-    <button class="btn btn-ghost btn-sm" onclick="loadFromSheet()">&#8635;&nbsp; Refresh from sheet</button>
+  <!-- VIEW TABS — only shown to admin/manager -->
+  <div class="view-tabs" id="viewTabs" style="display:none;">
+    <button class="view-tab active" id="tabMyTil" onclick="switchView('my')">👤 My TiL</button>
+    <button class="view-tab" id="tabAllTrainers" onclick="switchView('admin')">👥 All Trainers</button>
   </div>
 
-  <!-- KPIs -->
-  <div class="kpi-row">
-    <div class="kpi-card">
-      <div class="kpi-label">TiL Balance</div>
-      <div class="kpi-value blue" id="kpiBalance">&#8212;</div>
-      <div class="kpi-sub" id="kpiBalanceSub">Running total</div>
+  <!-- ══════════════════════════════════ -->
+  <!-- MY TIL VIEW                        -->
+  <!-- ══════════════════════════════════ -->
+  <div id="myTilView">
+    <div class="page-title-row">
+      <div>
+        <div class="page-title" id="pageTitle">Loading…</div>
+        <div class="page-sub" id="pageSub">Time in Lieu balance — loading…</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="loadFromSheet()">↻ Refresh from sheet</button>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Total Accrued</div>
-      <div class="kpi-value green" id="kpiAccrued">&#8212;</div>
-      <div class="kpi-sub" id="kpiAccruedSub">0 approved entries</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Total Taken</div>
-      <div class="kpi-value red" id="kpiTaken">&#8212;</div>
-      <div class="kpi-sub" id="kpiTakenSub">0 entries used</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Pending Approval</div>
-      <div class="kpi-value amber" id="kpiPending">0</div>
-      <div class="kpi-sub" id="kpiPendingSub">TiL taken entries</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Travel Time (Total)</div>
-      <div class="kpi-value dark" id="kpiTravel">&#8212;</div>
-      <div class="kpi-sub">Counted in accrued</div>
-    </div>
-  </div>
 
-  <!-- MAIN GRID -->
-  <div class="main-grid">
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">TiL Balance</div>
+        <div class="kpi-value blue" id="kpiBalance">—</div>
+        <div class="kpi-sub" id="kpiBalanceSub">Running total</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Accrued</div>
+        <div class="kpi-value green" id="kpiAccrued">—</div>
+        <div class="kpi-sub" id="kpiAccruedSub">0 approved entries</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Taken</div>
+        <div class="kpi-value red" id="kpiTaken">—</div>
+        <div class="kpi-sub" id="kpiTakenSub">0 entries used</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Pending Approval</div>
+        <div class="kpi-value amber" id="kpiPending">0</div>
+        <div class="kpi-sub" id="kpiPendingSub">TiL taken entries</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Travel Time (Total)</div>
+        <div class="kpi-value dark" id="kpiTravel">—</div>
+        <div class="kpi-sub">Counted in accrued</div>
+      </div>
+    </div>
 
-    <!-- CHART -->
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Balance Over Time</span>
+          <span class="card-meta">Approved TiL running balance</span>
+        </div>
+        <div class="chart-wrap"><canvas id="balanceChart"></canvas></div>
+      </div>
+
+      <!-- FORM -->
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Log Entry</span>
+          <span class="card-meta" id="formModeLabel">TiL Earned</span>
+        </div>
+
+        <div class="type-toggle">
+          <button class="active earned" id="typeEarned" onclick="setType('earned')">▲ TiL Earned</button>
+          <button id="typeTaken" onclick="setType('taken')">▼ TiL Taken</button>
+        </div>
+
+        <!-- EARNED FORM -->
+        <div id="earnedFields">
+          <div class="section-divider">Worked Hours</div>
+          <div class="form-time-row">
+            <div><label>Date *</label><input type="date" id="eDate" onchange="onDateChange()"></div>
+            <div><label>Start Time</label><input type="time" id="eStart" onchange="calcHours()"></div>
+            <div><label>End Time</label><input type="time" id="eEnd" onchange="calcHours()"></div>
+          </div>
+          <div class="form-2col">
+            <div class="form-row">
+              <label>Total Hours Worked</label>
+              <input type="number" id="eTotalHrs" value="8" min="0" step="0.25" oninput="calcTil()">
+            </div>
+            <div class="form-row">
+              <label>Standard Hours</label>
+              <input type="number" id="eStdHrs" value="8" min="0" step="0.5" oninput="calcTil()">
+              <div class="form-hint">Default 8 hrs</div>
+            </div>
+          </div>
+
+          <div class="section-divider">Day Type &amp; Multiplier</div>
+          <div class="flag-row" id="dayFlags"></div>
+          <div class="check-row">
+            <label class="check-label"><input type="checkbox" id="eBankHol" onchange="calcTil()"> Bank Holiday</label>
+            <label class="check-label"><input type="checkbox" id="eWeekend" onchange="calcTil()"> Weekend</label>
+          </div>
+          <div class="form-row">
+            <label>Travel Time (hrs)</label>
+            <input type="number" id="eTravel" placeholder="0" min="0" step="0.25" oninput="calcTil()">
+          </div>
+
+          <div class="til-preview-box">
+            <div class="til-preview-label">TiL Earned Preview</div>
+            <div class="til-preview-value" id="prevTilEarned">—</div>
+            <div class="til-preview-breakdown" id="prevBreakdown"></div>
+            <div class="til-preview-grid">
+              <div class="til-preview-row"><span>Overtime hrs</span><span id="prevOtHrs">—</span></div>
+              <div class="til-preview-row"><span>Multiplier</span><span id="prevMultiplier">—</span></div>
+            </div>
+          </div>
+
+          <div class="section-divider">Session Details</div>
+          <div class="form-row"><label>Client / Project *</label><input type="text" id="eClient" placeholder="e.g. Acorn Estates Ltd"></div>
+          <div class="form-2col">
+            <div class="form-row">
+              <label>Type of Work</label>
+              <select id="eWorkType">
+                <option value="">— Select —</option>
+                <option>Onsite Training</option>
+                <option>Online Training</option>
+                <option>Accounting Go-Live</option>
+                <option>Evening Demo</option>
+                <option>Weekend Session</option>
+                <option>Bank Holiday Cover</option>
+                <option>Travel Day</option>
+                <option>Support Visit</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Location</label>
+              <input type="text" id="eLocation" placeholder="e.g. Client Site">
+            </div>
+          </div>
+          <div class="form-row"><label>Notes</label><textarea id="eNotes" placeholder="Optional context…"></textarea></div>
+        </div>
+
+        <!-- TAKEN FORM -->
+        <div id="takenFields" style="display:none">
+          <div class="section-divider">Time Off Details</div>
+          <div class="form-2col">
+            <div class="form-row"><label>Date TiL Used *</label><input type="date" id="tDate"></div>
+            <div class="form-row"><label>Hours to Take *</label><input type="number" id="tHrs" min="0.25" step="0.25" value="7.5" oninput="updateTakenPreview()"></div>
+          </div>
+          <div class="form-row"><label>Notes / Reason</label><textarea id="tNotes" placeholder="e.g. Day off in lieu of 15 Jan go-live"></textarea></div>
+          <div class="til-preview-box">
+            <div class="til-preview-label">Balance Impact</div>
+            <div class="til-preview-grid" style="margin-top:6px;">
+              <div class="til-preview-row"><span>Current Balance</span><span class="hours-pos" id="prevBalance">— hrs</span></div>
+              <div class="til-preview-row"><span>After This Entry</span><span id="prevAfterTaken">— hrs</span></div>
+            </div>
+          </div>
+          <div style="background:#fff8e1;border:1px solid #fde047;border-radius:6px;padding:9px 12px;margin-bottom:12px;font-size:12px;color:#854d0e;">
+            ⏳ TiL Taken requests require approval from an admin or manager.
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="submitBtn" onclick="submitEntry()">Save Entry</button>
+      </div>
+    </div>
+
+    <!-- ENTRIES TABLE -->
     <div class="card">
       <div class="card-hdr">
-        <span class="card-title">Balance Over Time</span>
-        <span class="card-meta">Approved TiL running balance</span>
+        <span class="card-title">My Entries</span>
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
+          <button class="filter-tab" onclick="setFilter('earned',this)">TiL Earned</button>
+          <button class="filter-tab" onclick="setFilter('taken',this)">TiL Taken</button>
+          <button class="filter-tab" onclick="setFilter('pending',this)">Pending</button>
+        </div>
       </div>
-      <div class="chart-wrap"><canvas id="balanceChart"></canvas></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Date</th><th>Type</th><th>Client / Work</th>
+            <th>Hrs Worked</th><th>Overtime</th><th>Multiplier</th>
+            <th>TiL Earned</th><th>Hrs Taken</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="entriesTbody">
+            <tr><td colspan="10"><div class="empty-state"><div class="empty-icon">⏱</div>Loading entries…</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /myTilView -->
+
+
+  <!-- ══════════════════════════════════ -->
+  <!-- ADMIN ALL-TRAINERS VIEW            -->
+  <!-- ══════════════════════════════════ -->
+  <div id="adminView" class="admin-panel">
+
+    <div class="page-title-row">
+      <div>
+        <div class="page-title">All Trainers — TiL Overview</div>
+        <div class="page-sub" id="adminPageSub">Loading trainer data…</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="loadAllTrainers()">↻ Refresh all</button>
     </div>
 
-    <!-- FORM -->
-    <div class="card">
+    <!-- Summary Table -->
+    <div class="card" style="margin-bottom:14px;">
       <div class="card-hdr">
-        <span class="card-title">Log Entry</span>
-        <span class="card-meta" id="formModeLabel">TiL Earned</span>
+        <span class="card-title">Trainer Summary</span>
+        <span class="card-meta" id="adminSummaryMeta">Click a row to view detail</span>
       </div>
-
-      <div class="type-toggle">
-        <button class="active earned" id="typeEarned" onclick="setType('earned')">&#9650; TiL Earned</button>
-        <button id="typeTaken" onclick="setType('taken')">&#9660; TiL Taken</button>
-      </div>
-
-      <!-- EARNED FORM -->
-      <div id="earnedFields">
-        <div class="section-divider">Worked Hours</div>
-        <div class="form-3col">
-          <div class="form-row"><label>Date *</label><input type="date" id="eDate" onchange="onDateChange()"></div>
-          <div class="form-row"><label>Start Time</label><input type="time" id="eStart" onchange="calcHours()"></div>
-          <div class="form-row"><label>End Time</label><input type="time" id="eEnd" onchange="calcHours()"></div>
-        </div>
-        <div class="form-2col">
-          <div class="form-row">
-            <label>Total Hours Worked</label>
-            <input type="number" id="eTotalHrs" placeholder="e.g. 10" min="0" step="0.25" oninput="calcTil()">
-          </div>
-          <div class="form-row">
-            <label>Standard Hours</label>
-            <input type="number" id="eStdHrs" value="8" min="0" step="0.5" oninput="calcTil()">
-            <div class="form-hint">Default 8 hrs</div>
-          </div>
-        </div>
-
-        <div class="section-divider">Day Type &amp; Multiplier</div>
-        <div class="flag-row" id="dayFlags"></div>
-        <div class="check-row">
-          <label class="check-label"><input type="checkbox" id="eBankHol" onchange="calcTil()"> Bank Holiday</label>
-          <label class="check-label"><input type="checkbox" id="eWeekend" onchange="calcTil()"> Weekend</label>
-        </div>
-        <div class="form-row">
-          <label>Travel Time (hrs)</label>
-          <input type="number" id="eTravel" placeholder="0" min="0" step="0.25" oninput="calcTil()">
-        </div>
-
-        <!-- TiL Preview -->
-        <div class="til-preview-box">
-          <div class="til-preview-label">TiL Earned Preview</div>
-          <div class="til-preview-value" id="prevTilEarned">&#8212;</div>
-          <div class="til-preview-breakdown" id="prevBreakdown"></div>
-          <div class="til-preview-grid">
-            <div class="til-preview-row"><span>Overtime hrs</span><span id="prevOtHrs">—</span></div>
-            <div class="til-preview-row"><span>Multiplier</span><span id="prevMultiplier">—</span></div>
-          </div>
-        </div>
-
-        <div class="section-divider">Session Details</div>
-        <div class="form-row"><label>Client / Project *</label><input type="text" id="eClient" placeholder="e.g. Acorn Estates Ltd"></div>
-        <div class="form-2col">
-          <div class="form-row">
-            <label>Type of Work</label>
-            <select id="eWorkType">
-              <option value="">— Select —</option>
-              <option>Onsite Training</option>
-              <option>Online Training</option>
-              <option>Accounting Go-Live</option>
-              <option>Evening Demo</option>
-              <option>Weekend Session</option>
-              <option>Bank Holiday Cover</option>
-              <option>Travel Day</option>
-              <option>Support Visit</option>
-              <option>Other</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <label>Location</label>
-            <input type="text" id="eLocation" placeholder="e.g. Client Site">
-          </div>
-        </div>
-        <div class="form-row"><label>Notes</label><textarea id="eNotes" placeholder="Optional context, details…"></textarea></div>
-      </div>
-
-      <!-- TAKEN FORM -->
-      <div id="takenFields" style="display:none">
-        <div class="section-divider">Time Off Details</div>
-        <div class="form-2col">
-          <div class="form-row"><label>Date TiL Used *</label><input type="date" id="tDate"></div>
-          <div class="form-row"><label>Hours to Take *</label><input type="number" id="tHrs" min="0.25" step="0.25" value="7.5" oninput="updateTakenPreview()"></div>
-        </div>
-        <div class="form-row"><label>Notes / Reason</label><textarea id="tNotes" placeholder="e.g. Day off in lieu of 15 Jan go-live"></textarea></div>
-        <div class="til-preview-box">
-          <div class="til-preview-label">Balance Impact</div>
-          <div class="til-preview-grid" style="margin-top:6px;">
-            <div class="til-preview-row"><span>Current Balance</span><span class="hours-pos" id="prevBalance">— hrs</span></div>
-            <div class="til-preview-row"><span>After This Entry</span><span id="prevAfterTaken">— hrs</span></div>
-          </div>
-        </div>
-      </div>
-
-      <button class="btn btn-primary" id="submitBtn" onclick="submitEntry()">Save Entry</button>
-    </div>
-
-  </div>
-
-  <!-- ENTRIES TABLE -->
-  <div class="card">
-    <div class="card-hdr">
-      <span class="card-title">All Entries</span>
-      <div class="filter-tabs">
-        <button class="filter-tab active" onclick="setFilter('all',this)">All</button>
-        <button class="filter-tab" onclick="setFilter('earned',this)">TiL Earned</button>
-        <button class="filter-tab" onclick="setFilter('taken',this)">TiL Taken</button>
-        <button class="filter-tab" onclick="setFilter('pending',this)">Pending</button>
+      <div class="tbl-wrap">
+        <table class="trainer-summary-table">
+          <thead><tr>
+            <th>Trainer</th><th>Role</th><th>Balance</th>
+            <th>Total Accrued</th><th>Total Taken</th><th>Pending Approval</th>
+          </tr></thead>
+          <tbody id="adminSummaryTbody">
+            <tr><td colspan="6"><div class="empty-state"><div class="empty-icon">👥</div>Loading…</div></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Client / Work</th>
-            <th>Hrs Worked</th>
-            <th>Overtime</th>
-            <th>Multiplier</th>
-            <th>TiL Earned</th>
-            <th>Hrs Taken</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="entriesTbody">
-          <tr><td colspan="10"><div class="empty-state"><div class="empty-icon">&#9201;</div>Loading entries&#8230;</div></td></tr>
-        </tbody>
-      </table>
+
+    <!-- Selected Trainer Detail -->
+    <div id="adminTrainerDetail" style="display:none;">
+      <div class="trainer-detail-header">
+        <div class="trainer-detail-title" id="adminDetailName">—</div>
+        <div style="display:flex;gap:8px;">
+          <div class="filter-tabs">
+            <button class="filter-tab active" onclick="setAdminFilter('all',this)">All</button>
+            <button class="filter-tab" onclick="setAdminFilter('earned',this)">Earned</button>
+            <button class="filter-tab" onclick="setAdminFilter('taken',this)">Taken</button>
+            <button class="filter-tab" onclick="setAdminFilter('pending',this)">Pending</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- mini KPIs for selected trainer -->
+      <div class="admin-kpi-row" id="adminMiniKpis"></div>
+
+      <div id="adminPendingAlert" class="pending-alert" style="display:none;">
+        ⚠️ <span id="adminPendingText"></span>
+      </div>
+
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Date</th><th>Type</th><th>Client / Work</th>
+              <th>Hrs Worked</th><th>Overtime</th><th>Multiplier</th>
+              <th>TiL Earned</th><th>Hrs Taken</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="adminEntriesTbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
+  </div><!-- /adminView -->
 
 </div><!-- /page -->
 
@@ -543,36 +642,46 @@ tbody tr:hover td{background:var(--card-light-grey);}
 // ═══════════════════════════════════════════════════════════════
 const API_URL    = 'https://script.google.com/macros/s/AKfycbzCvBhFSPyyoaVsui0DCxvGQQa0V7e_UCJ5LfqvcSysTHTFlNRcx4ewlET5TyouJ0ZYow/exec';
 const LS_TRAINER = 'til_trainer';
-const LS_CACHE   = 'til_v2_cache';
+const LS_CACHE   = 'til_v3_cache';
 const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 // ═══════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════
-let USERS        = [];   // all active users loaded from Users sheet
-let currentUser  = null; // { name, pin, role } of logged-in user
-let entries      = [];
-let activeFilter = 'all';
-let pendingApprovalId = null;
-let chart        = null;
-let currentType  = 'earned';
-let loginSelectedUser = null;
-let pinEntry     = '';
+let USERS               = [];
+let currentUser         = null;
+let entries             = [];
+let activeFilter        = 'all';
+let adminFilter         = 'all';
+let pendingApprovalId   = null;
+let pendingApprovalTrainer = null;
+let chart               = null;
+let currentType         = 'earned';
+let loginSelectedUser   = null;
+let pinEntry            = '';
+let currentView         = 'my';    // 'my' | 'admin'
+let allTrainerData      = {};      // { trainerName: [entries] }
+let selectedAdminTrainer = null;
 
 // ═══════════════════════════════════════════════════════════════
-// HELPERS — all fetch calls go through apiCall() which handles
-// the Apps Script redirect and gives back parsed JSON or throws.
+// ROLE HELPERS
+// ═══════════════════════════════════════════════════════════════
+function isAdmin(user) {
+  if (!user) return false;
+  return ['admin','manager'].includes((user.role || '').toLowerCase());
+}
+function canApprove() { return isAdmin(currentUser); }
+
+// ═══════════════════════════════════════════════════════════════
+// API
 // ═══════════════════════════════════════════════════════════════
 async function apiCall(params) {
   const url = `${API_URL}?${new URLSearchParams(params).toString()}`;
   const resp = await fetch(url, { redirect: 'follow' });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const text = await resp.text();
-  try {
-    return JSON.parse(text);
-  } catch (_) {
-    throw new Error('Bad JSON from server: ' + text.slice(0, 120));
-  }
+  try { return JSON.parse(text); }
+  catch (_) { throw new Error('Bad JSON: ' + text.slice(0, 120)); }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -583,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('eDate').value  = today;
   document.getElementById('eStart').value = '09:30';
   document.getElementById('eEnd').value   = '17:30';
-  document.getElementById('tDate').value = today;
+  document.getElementById('tDate').value  = today;
 
   document.addEventListener('click', ev => {
     if (!document.getElementById('hmbBtn').contains(ev.target) &&
@@ -592,66 +701,48 @@ document.addEventListener('DOMContentLoaded', () => {
         !document.getElementById('nameSuggestions').contains(ev.target))
       document.getElementById('nameSuggestions').classList.remove('open');
   });
-
   bootApp();
 });
 
 async function bootApp() {
-  // Always fetch fresh users on load so PINs are live from the sheet
   const ok = await loadUsers();
-  if (!ok) return; // loadUsers shows its own error UI
-
+  if (!ok) return;
   const saved = localStorage.getItem(LS_TRAINER);
   const user  = saved ? USERS.find(u => u.name === saved) : null;
-  if (user) {
-    doLoginSuccess(user.name);
-  } else {
-    showLoginScreen();
-  }
+  if (user) { doLoginSuccess(user.name); }
+  else { showLoginScreen(); }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LOAD USERS FROM SHEET
-// Calls getUsers action → Users tab → returns all active users
-// with their name (B+C), role (E), and PIN (K).
+// LOAD USERS
 // ═══════════════════════════════════════════════════════════════
 async function loadUsers() {
   setLoginStatus('loading', 'Connecting to Users sheet…');
-
   try {
     const data = await apiCall({ action: 'getUsers' });
-
-    if (!data.success) throw new Error(data.error || 'getUsers returned success:false');
-
+    if (!data.success) throw new Error(data.error || 'getUsers failed');
     USERS = (data.users || [])
       .filter(u => u.active !== false)
       .map(u => ({
         name: (u.name || '').trim(),
-        // PIN from col K — sheet may store as number, cast to string
         pin:  String(u.pin || '').trim(),
-        role: (u.role || 'viewer').trim().toLowerCase(),
+        role: (u.role || 'trainer').trim().toLowerCase(),
       }))
-      .filter(u => u.name); // drop any blank-name rows
-
-    console.log('[TiL] Loaded', USERS.length, 'users from sheet:', USERS.map(u => u.name));
-
-    if (USERS.length === 0) {
-      setLoginStatus('warn', 'No active users found in Users sheet — check the sheet has data.');
+      .filter(u => u.name);
+    console.log('[TiL] Users loaded:', USERS.length);
+    if (!USERS.length) {
+      setLoginStatus('warn', 'No active users found in Users sheet.');
       return false;
     }
-
     setLoginStatus('ok', `${USERS.length} users loaded — search for your name`);
     document.getElementById('loginSub1').textContent = 'Search for your name to continue';
     document.getElementById('nameSearchInput').disabled = false;
     document.getElementById('nameSearchInput').focus();
     return true;
-
   } catch (err) {
-    console.error('[TiL] loadUsers failed:', err.message);
+    console.error('[TiL] loadUsers:', err.message);
     setLoginStatus('error',
-      `Could not reach the sheet: ${err.message} — ` +
-      '<a href="#" onclick="bootApp();return false;" style="color:#c0392b;font-weight:700;text-decoration:underline;">Retry</a>'
-    );
+      `Could not reach the sheet: ${err.message} — <a href="#" onclick="bootApp();return false;" style="color:#c0392b;font-weight:700;text-decoration:underline;">Retry</a>`);
     document.getElementById('loginScreen').classList.remove('hidden');
     return false;
   }
@@ -662,70 +753,58 @@ function setLoginStatus(state, html) {
   const dot   = document.getElementById('loginStatusDot');
   const text  = document.getElementById('loginStatusText');
   if (!strip) return;
-
   strip.style.display = 'flex';
   text.innerHTML = html;
-
-  const styles = {
-    loading: { bg: '#f8f8f8', border: '#e5e5e5', color: '#4c4d57', dot: '#f1c238', anim: 'pulse .8s ease infinite' },
-    ok:      { bg: '#f0faf3', border: '#8fd4a8', color: '#1a6632', dot: '#4caf50', anim: 'none' },
-    warn:    { bg: '#fffbeb', border: '#fde047', color: '#854d0e', dot: '#f59e0b', anim: 'none' },
-    error:   { bg: '#fef2f2', border: '#f9b4bc', color: '#9e2a35', dot: '#c0392b', anim: 'none' },
-  };
-  const s = styles[state] || styles.loading;
-  strip.style.background = s.bg;
+  const s = {
+    loading:{ bg:'#f8f8f8',border:'#e5e5e5',color:'#4c4d57',dot:'#f1c238',anim:'pulse .8s ease infinite'},
+    ok:     { bg:'#f0faf3',border:'#8fd4a8',color:'#1a6632',dot:'#4caf50',anim:'none'},
+    warn:   { bg:'#fffbeb',border:'#fde047',color:'#854d0e',dot:'#f59e0b',anim:'none'},
+    error:  { bg:'#fef2f2',border:'#f9b4bc',color:'#9e2a35',dot:'#c0392b',anim:'none'},
+  }[state] || {bg:'#f8f8f8',border:'#e5e5e5',color:'#4c4d57',dot:'#f1c238',anim:'pulse .8s ease infinite'};
+  strip.style.background  = s.bg;
   strip.style.borderColor = s.border;
-  strip.style.color = s.color;
-  dot.style.background = s.dot;
-  dot.style.animation = s.anim;
-
-  // Hide strip after 3s once successfully loaded
+  strip.style.color       = s.color;
+  dot.style.background    = s.dot;
+  dot.style.animation     = s.anim;
   if (state === 'ok') setTimeout(() => { strip.style.display = 'none'; }, 3000);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LOGIN — step 1: name search
+// LOGIN — step 1
 // ═══════════════════════════════════════════════════════════════
 function showLoginScreen() {
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('loginStep1').style.display = '';
   document.getElementById('loginStep2').style.display = 'none';
   document.getElementById('nameSearchInput').value = '';
-  document.getElementById('nameSearchInput').disabled = false; // users already loaded
-  document.getElementById('nameSuggestions').classList.remove('open');
   document.getElementById('continueBtn').disabled = true;
   loginSelectedUser = null;
   setTimeout(() => document.getElementById('nameSearchInput').focus(), 100);
 }
-
 function onNameSearch() {
   const q = document.getElementById('nameSearchInput').value.trim().toLowerCase();
   const sugEl = document.getElementById('nameSuggestions');
-
   loginSelectedUser = null;
   document.getElementById('continueBtn').disabled = true;
-
   if (!q) { sugEl.classList.remove('open'); return; }
-
   const matches = USERS.filter(u => u.name.toLowerCase().includes(q));
-
   if (!matches.length) {
     sugEl.innerHTML = '<div class="no-match">No matching users found.</div>';
     sugEl.classList.add('open');
     return;
   }
-
   sugEl.innerHTML = matches.map(u => {
-    const initials = u.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-    // Escape single quotes in name for the onclick
-    const safeName = u.name.replace(/'/g, "\\'");
+    const initials = u.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const safeName = u.name.replace(/'/g,"\\'");
+    const roleCls = `role-${u.role}`;
     return `<div class="name-suggestion-item" onclick="selectUser('${safeName}')">
-      <div class="suggestion-avatar">${initials}</div>${u.name}
+      <div class="suggestion-avatar">${initials}</div>
+      <span>${u.name}</span>
+      <span class="role-badge ${roleCls}" style="margin-left:auto">${u.role}</span>
     </div>`;
   }).join('');
   sugEl.classList.add('open');
 }
-
 function selectUser(name) {
   loginSelectedUser = USERS.find(u => u.name === name) || null;
   document.getElementById('nameSearchInput').value = name;
@@ -734,7 +813,7 @@ function selectUser(name) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LOGIN — step 2: PIN pad
+// LOGIN — step 2: PIN (numbers only)
 // ═══════════════════════════════════════════════════════════════
 function goToPin() {
   if (!loginSelectedUser) return;
@@ -746,16 +825,14 @@ function goToPin() {
   document.getElementById('loginStep1').style.display = 'none';
   document.getElementById('loginStep2').style.display = '';
 }
-
 function backToName() {
   pinEntry = '';
   document.getElementById('loginStep1').style.display = '';
   document.getElementById('loginStep2').style.display = 'none';
 }
-
 function numpadPress(key) {
   if (key === 'back') {
-    pinEntry = pinEntry.slice(0, -1);
+    pinEntry = pinEntry.slice(0,-1);
     updatePinDots();
     document.getElementById('pinError').textContent = '';
     return;
@@ -765,7 +842,6 @@ function numpadPress(key) {
   updatePinDots();
   if (pinEntry.length === 4) setTimeout(checkPin, 150);
 }
-
 function updatePinDots() {
   for (let i = 0; i < 4; i++) {
     const dot = document.getElementById('pd' + i);
@@ -773,49 +849,47 @@ function updatePinDots() {
     dot.classList.remove('error');
   }
 }
-
 function checkPin() {
   if (!loginSelectedUser) return;
-
   const correctPin = loginSelectedUser.pin;
-
-  // Debug: log (remove once confirmed working)
-  console.log('[TiL] checkPin — entered:', pinEntry, '| sheet PIN:', correctPin,
-              '| match:', pinEntry === correctPin);
-
+  console.log('[TiL] PIN check — entered:', pinEntry, '| sheet:', correctPin);
   if (!correctPin) {
-    document.getElementById('pinError').textContent =
-      'No PIN set for this user — add one to col K in the Users sheet';
-    setTimeout(() => {
-      pinEntry = '';
-      updatePinDots();
-      document.getElementById('pinError').textContent = '';
-    }, 2800);
+    document.getElementById('pinError').textContent = 'No PIN set — add one to col K in Users sheet';
+    setTimeout(() => { pinEntry = ''; updatePinDots(); document.getElementById('pinError').textContent = ''; }, 2800);
     return;
   }
-
   if (pinEntry === correctPin) {
     doLoginSuccess(loginSelectedUser.name);
   } else {
     for (let i = 0; i < 4; i++) document.getElementById('pd' + i).classList.add('error');
     document.getElementById('pinError').textContent = 'Incorrect PIN — try again';
-    setTimeout(() => {
-      pinEntry = '';
-      updatePinDots();
-      document.getElementById('pinError').textContent = '';
-    }, 1200);
+    setTimeout(() => { pinEntry = ''; updatePinDots(); document.getElementById('pinError').textContent = ''; }, 1200);
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// LOGIN SUCCESS
+// ═══════════════════════════════════════════════════════════════
 function doLoginSuccess(name) {
-  currentUser = USERS.find(u => u.name === name) || { name, pin: '', role: 'viewer' };
+  currentUser = USERS.find(u => u.name === name) || { name, pin: '', role: 'trainer' };
   localStorage.setItem(LS_TRAINER, name);
 
-  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('hdrAvatar').textContent = initials;
   document.getElementById('hdrName').textContent   = name;
   document.getElementById('pageTitle').textContent = name;
   document.getElementById('loginScreen').classList.add('hidden');
+
+  // Show role badge in header
+  const roleBadge = document.getElementById('hdrRoleBadge');
+  roleBadge.style.display = 'inline-flex';
+  roleBadge.className = `role-badge role-${currentUser.role}`;
+  roleBadge.textContent = currentUser.role;
+
+  // Show admin tabs if admin/manager
+  if (isAdmin(currentUser)) {
+    document.getElementById('viewTabs').style.display = 'flex';
+  }
 
   onDateChange();
   loadFromCache();
@@ -824,13 +898,157 @@ function doLoginSuccess(name) {
 
 function signOut() {
   if (!confirm('Sign out of the TiL Tracker?')) return;
-  currentUser = null;
-  entries = [];
+  currentUser = null; entries = [];
+  allTrainerData = {}; selectedAdminTrainer = null;
   localStorage.removeItem(LS_TRAINER);
   if (chart) { chart.destroy(); chart = null; }
   setSyncState('', 'Not signed in');
-  // Re-fetch users on sign out so PINs are always fresh
+  document.getElementById('viewTabs').style.display = 'none';
+  document.getElementById('hdrRoleBadge').style.display = 'none';
   bootApp();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VIEW SWITCHING (My TiL / All Trainers)
+// ═══════════════════════════════════════════════════════════════
+function switchView(view) {
+  currentView = view;
+  document.getElementById('tabMyTil').classList.toggle('active', view === 'my');
+  document.getElementById('tabAllTrainers').classList.toggle('active', view === 'admin');
+  document.getElementById('myTilView').style.display  = view === 'my'    ? '' : 'none';
+  document.getElementById('adminView').classList.toggle('visible', view === 'admin');
+
+  if (view === 'admin') loadAllTrainers();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN — load all trainers
+// ═══════════════════════════════════════════════════════════════
+async function loadAllTrainers() {
+  setSyncState('saving', 'Loading all trainers…');
+  document.getElementById('adminSummaryTbody').innerHTML =
+    '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">⏳</div>Loading…</div></td></tr>';
+
+  const trainers = USERS.filter(u => u.role !== 'viewer');
+  const results  = [];
+
+  for (const u of trainers) {
+    try {
+      const data = await apiCall({ action: 'getTilLog', trainer: u.name });
+      const ents = data.success ? (data.entries || []) : [];
+      allTrainerData[u.name] = ents;
+      results.push({ user: u, entries: ents });
+    } catch (_) {
+      allTrainerData[u.name] = [];
+      results.push({ user: u, entries: [] });
+    }
+  }
+
+  renderAdminSummary(results);
+  setSyncState('ok', 'All trainers loaded');
+  document.getElementById('adminPageSub').textContent =
+    `${trainers.length} trainers loaded — click a row to view details`;
+}
+
+function renderAdminSummary(results) {
+  const tbody = document.getElementById('adminSummaryTbody');
+  if (!results.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No trainers found</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = results.map(({ user, entries: ents }) => {
+    const stats    = calcBalanceFor(ents);
+    const pending  = ents.filter(e => e.tilTaken === 'Y' && e.approvalStatus === 'Pending').length;
+    const initials = user.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const balCls   = stats.balance < 0 ? 'hours-neg' : 'hours-pos';
+    const pendCls  = pending > 0 ? 'kpi-value amber' : '';
+    const roleCls  = `role-${user.role}`;
+    return `<tr onclick="selectAdminTrainer('${user.name.replace(/'/g,"\\'")}')">
+      <td><div class="trainer-name-cell">
+        <div class="trainer-avatar">${initials}</div>
+        <strong>${user.name}</strong>
+      </div></td>
+      <td><span class="role-badge ${roleCls}">${user.role}</span></td>
+      <td><span class="${balCls}">${stats.balance.toFixed(2)} hrs</span></td>
+      <td class="hours-pos">${stats.accrued.toFixed(2)} hrs</td>
+      <td class="hours-neg">${stats.taken.toFixed(2)} hrs</td>
+      <td>${pending > 0 ? `<span class="badge badge-pending">● ${pending} pending</span>` : '<span style="color:var(--text--dark--30);font-size:12px;">None</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function selectAdminTrainer(name) {
+  selectedAdminTrainer = name;
+  const ents = allTrainerData[name] || [];
+
+  // Highlight row
+  document.querySelectorAll('.trainer-summary-table tbody tr').forEach(r => r.classList.remove('selected'));
+  const rows = document.querySelectorAll('.trainer-summary-table tbody tr');
+  rows.forEach(r => { if (r.textContent.includes(name)) r.classList.add('selected'); });
+
+  document.getElementById('adminTrainerDetail').style.display = '';
+  document.getElementById('adminDetailName').textContent = `${name} — Entry Detail`;
+
+  const stats = calcBalanceFor(ents);
+  const pending = ents.filter(e => e.tilTaken === 'Y' && e.approvalStatus === 'Pending').length;
+
+  // Mini KPIs
+  document.getElementById('adminMiniKpis').innerHTML = `
+    <div class="admin-kpi-card">
+      <div class="kpi-label">Balance</div>
+      <div class="kpi-value ${stats.balance < 0 ? 'red' : 'blue'}" style="font-size:20px">${stats.balance.toFixed(2)} hrs</div>
+    </div>
+    <div class="admin-kpi-card">
+      <div class="kpi-label">Total Accrued</div>
+      <div class="kpi-value green" style="font-size:20px">${stats.accrued.toFixed(2)} hrs</div>
+    </div>
+    <div class="admin-kpi-card">
+      <div class="kpi-label">Total Taken</div>
+      <div class="kpi-value red" style="font-size:20px">${stats.taken.toFixed(2)} hrs</div>
+    </div>
+    <div class="admin-kpi-card">
+      <div class="kpi-label">Pending Approval</div>
+      <div class="kpi-value ${pending > 0 ? 'amber' : 'dark'}" style="font-size:20px">${pending}</div>
+    </div>`;
+
+  // Pending alert
+  const alert = document.getElementById('adminPendingAlert');
+  if (pending > 0) {
+    alert.style.display = 'flex';
+    document.getElementById('adminPendingText').textContent =
+      `${pending} TiL Taken ${pending === 1 ? 'request requires' : 'requests require'} your approval`;
+  } else {
+    alert.style.display = 'none';
+  }
+
+  renderAdminEntries(ents);
+
+  // Scroll to detail
+  setTimeout(() => {
+    document.getElementById('adminTrainerDetail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+function setAdminFilter(f, el) {
+  adminFilter = f;
+  document.querySelectorAll('#adminView .filter-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (selectedAdminTrainer) renderAdminEntries(allTrainerData[selectedAdminTrainer] || []);
+}
+
+function renderAdminEntries(ents) {
+  let rows = [...ents].sort((a,b) => new Date(b.date) - new Date(a.date));
+  if (adminFilter === 'earned')  rows = rows.filter(e => e.tilTaken !== 'Y');
+  if (adminFilter === 'taken')   rows = rows.filter(e => e.tilTaken === 'Y');
+  if (adminFilter === 'pending') rows = rows.filter(e => e.approvalStatus === 'Pending');
+
+  const tbody = document.getElementById('adminEntriesTbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div>No entries found</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(e => buildEntryRow(e, true)).join('');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -846,7 +1064,7 @@ function closeMenu() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DATA — load from sheet (getTilLog) and cache
+// DATA
 // ═══════════════════════════════════════════════════════════════
 function loadFromCache() {
   try {
@@ -861,21 +1079,16 @@ async function loadFromSheet() {
   try {
     const name = currentUser && currentUser.name;
     if (!name) return;
-
     const data = await apiCall({ action: 'getTilLog', trainer: name });
     if (!data.success) throw new Error(data.error || 'getTilLog failed');
-
     entries = data.entries || [];
     saveCache();
     renderAll();
-    setSyncState('ok', 'Synced ' +
-      new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
-
+    setSyncState('ok', 'Synced ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
   } catch (err) {
     console.error('[TiL] loadFromSheet:', err.message);
     setSyncState('error', 'Offline — showing cache');
-    if (!entries.length)
-      showEmpty('Could not connect to Google Sheets. Check your connection and click Refresh.');
+    if (!entries.length) showEmpty('Could not connect to Google Sheets.');
     toast('Could not reach Google Sheets', 'error');
   }
 }
@@ -893,9 +1106,9 @@ function saveCache() {
 // ═══════════════════════════════════════════════════════════════
 // CALCULATIONS
 // ═══════════════════════════════════════════════════════════════
-function calcBalance() {
+function calcBalanceFor(ents) {
   let accrued = 0, taken = 0, travel = 0;
-  for (const e of entries) {
+  for (const e of ents) {
     if (e.tilTaken === 'Y') {
       if (e.approvalStatus === 'Approved') taken += e.hrsUsed || 0;
     } else {
@@ -907,23 +1120,22 @@ function calcBalance() {
   }
   return { balance: accrued - taken, accrued, taken, travel };
 }
+function calcBalance() { return calcBalanceFor(entries); }
 
 function getDay(dateStr) {
   if (!dateStr) return '';
   return DAY_NAMES[new Date(dateStr + 'T00:00:00').getDay()];
 }
-
 function calcHours() {
   const s = document.getElementById('eStart').value;
   const e = document.getElementById('eEnd').value;
   if (!s || !e) return;
-  const [sh, sm] = s.split(':').map(Number);
-  const [eh, em] = e.split(':').map(Number);
-  const total = ((eh * 60 + em) - (sh * 60 + sm)) / 60;
+  const [sh,sm] = s.split(':').map(Number);
+  const [eh,em] = e.split(':').map(Number);
+  const total = ((eh*60+em)-(sh*60+sm))/60;
   if (total > 0) document.getElementById('eTotalHrs').value = total.toFixed(2);
   calcTil();
 }
-
 function calcTil() {
   const total  = parseFloat(document.getElementById('eTotalHrs').value) || 0;
   const std    = parseFloat(document.getElementById('eStdHrs').value)   || 8;
@@ -933,35 +1145,23 @@ function calcTil() {
   const otHrs  = Math.max(0, total - std);
   const mult   = (bh && we) ? 2.0 : (bh || we) ? 1.5 : 1.0;
   const earned = parseFloat(((otHrs * mult) + travel).toFixed(2));
-
-  document.getElementById('prevTilEarned').textContent = earned ? `${earned.toFixed(2)} hrs` : '—';
-  document.getElementById('prevOtHrs').textContent     = otHrs  ? `${otHrs.toFixed(2)} hrs`  : '—';
+  document.getElementById('prevTilEarned').textContent  = earned ? `${earned.toFixed(2)} hrs` : '—';
+  document.getElementById('prevOtHrs').textContent      = otHrs  ? `${otHrs.toFixed(2)} hrs`  : '—';
   document.getElementById('prevMultiplier').textContent = `×${mult.toFixed(1)}`;
   document.getElementById('prevBreakdown').textContent  = earned
     ? `(${otHrs.toFixed(2)} OT × ${mult.toFixed(1)}) + ${travel.toFixed(2)} travel` : '';
 }
-
 function onDateChange() {
   const dateVal = document.getElementById('eDate').value;
-  const day     = getDay(dateVal);
-  const isWE    = day === 'Sat' || day === 'Sun';
+  const day = getDay(dateVal);
+  const isWE = day === 'Sat' || day === 'Sun';
   document.getElementById('eWeekend').checked = isWE;
-
   const flags = document.getElementById('dayFlags');
   flags.innerHTML = '';
-  if (day) {
-    const c = document.createElement('div');
-    c.className = 'flag-chip'; c.textContent = day;
-    flags.appendChild(c);
-  }
-  if (isWE) {
-    const c = document.createElement('div');
-    c.className = 'flag-chip we'; c.textContent = '⚡ Weekend';
-    flags.appendChild(c);
-  }
+  if (day) { const c = document.createElement('div'); c.className='flag-chip'; c.textContent=day; flags.appendChild(c); }
+  if (isWE){ const c = document.createElement('div'); c.className='flag-chip we'; c.textContent='⚡ Weekend'; flags.appendChild(c); }
   calcTil();
 }
-
 function updateTakenPreview() {
   const { balance } = calcBalance();
   const hrs   = parseFloat(document.getElementById('tHrs').value) || 0;
@@ -985,22 +1185,19 @@ function setType(type) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SUBMIT — saves entry to the Time in Lieu Log sheet
+// SUBMIT
 // ═══════════════════════════════════════════════════════════════
 async function submitEntry() {
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
-
   try {
     const name = currentUser && currentUser.name;
     if (!name) throw new Error('No user logged in');
 
     let params;
-
     if (currentType === 'earned') {
       const dateVal = document.getElementById('eDate').value;
       if (!dateVal) { toast('Please select a date', 'error'); return; }
-
       const total  = parseFloat(document.getElementById('eTotalHrs').value) || 0;
       const std    = parseFloat(document.getElementById('eStdHrs').value)   || 8;
       const travel = parseFloat(document.getElementById('eTravel').value)   || 0;
@@ -1009,148 +1206,194 @@ async function submitEntry() {
       const otHrs  = Math.max(0, total - std);
       const mult   = (bh && we) ? 2.0 : (bh || we) ? 1.5 : 1.0;
       const earned = parseFloat(((otHrs * mult) + travel).toFixed(2));
-
       params = {
-        action: 'saveTilEntry', trainer: name,
-        date: dateVal, day: getDay(dateVal),
-        client:         document.getElementById('eClient').value,
-        typeOfWork:     document.getElementById('eWorkType').value,
-        location:       document.getElementById('eLocation').value,
-        startTime:      document.getElementById('eStart').value,
-        endTime:        document.getElementById('eEnd').value,
-        totalHrs:       total.toFixed(2),
-        stdHrs:         std.toFixed(2),
-        otHrs:          otHrs.toFixed(2),
-        bankHol:        bh ? 'Y' : 'N',
-        weekend:        we ? 'Y' : 'N',
-        travel:         travel.toFixed(2),
-        multiplier:     mult.toFixed(1),
-        tilEarned:      earned.toFixed(2),
-        approvalStatus: 'Approved',
-        tilTaken:       'N',
-        dateUsed:       '', hrsUsed: '0',
-        notes:          document.getElementById('eNotes').value,
+        action:'saveTilEntry', trainer:name,
+        date:dateVal, day:getDay(dateVal),
+        client:document.getElementById('eClient').value,
+        typeOfWork:document.getElementById('eWorkType').value,
+        location:document.getElementById('eLocation').value,
+        startTime:document.getElementById('eStart').value,
+        endTime:document.getElementById('eEnd').value,
+        totalHrs:total.toFixed(2), stdHrs:std.toFixed(2),
+        otHrs:otHrs.toFixed(2), bankHol:bh?'Y':'N', weekend:we?'Y':'N',
+        travel:travel.toFixed(2), multiplier:mult.toFixed(1),
+        tilEarned:earned.toFixed(2), approvalStatus:'Approved',
+        tilTaken:'N', dateUsed:'', hrsUsed:'0',
+        notes:document.getElementById('eNotes').value,
       };
-
     } else {
       const dateVal = document.getElementById('tDate').value;
       const hrs     = document.getElementById('tHrs').value;
       if (!dateVal || !hrs) { toast('Please fill in date and hours', 'error'); return; }
-
       params = {
-        action: 'saveTilEntry', trainer: name,
-        date: dateVal, day: getDay(dateVal),
-        typeOfWork:     'TiL Taken',
-        approvalStatus: 'Pending',
-        tilTaken:       'Y', dateUsed: dateVal, hrsUsed: hrs,
-        tilEarned: '0', otHrs: '0', totalHrs: '0', stdHrs: '0',
-        notes:          document.getElementById('tNotes').value,
-        client: '', location: '', startTime: '', endTime: '',
-        travel: '0', multiplier: '1', bankHol: 'N', weekend: 'N',
+        action:'saveTilEntry', trainer:name,
+        date:dateVal, day:getDay(dateVal),
+        typeOfWork:'TiL Taken', approvalStatus:'Pending',
+        tilTaken:'Y', dateUsed:dateVal, hrsUsed:hrs,
+        tilEarned:'0', otHrs:'0', totalHrs:'0', stdHrs:'0',
+        notes:document.getElementById('tNotes').value,
+        client:'', location:'', startTime:'', endTime:'',
+        travel:'0', multiplier:'1', bankHol:'N', weekend:'N',
       };
     }
 
     setSyncState('saving', 'Saving…');
     const data = await apiCall(params);
     if (!data.success) throw new Error(data.error || 'Save failed');
-
     toast('Entry saved ✓', 'success');
     resetForm();
     await loadFromSheet();
-
   } catch (err) {
     console.error('[TiL] submitEntry:', err.message);
     toast('Save failed: ' + err.message, 'error');
     setSyncState('error', 'Save failed');
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Save Entry';
+    btn.disabled = false; btn.textContent = 'Save Entry';
   }
 }
 
 function resetForm() {
-  ['eClient','eNotes','eLocation','eTotalHrs','eTravel'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
-  document.getElementById('eStart').value = '09:30';
-  document.getElementById('eEnd').value   = '17:30';
+  ['eClient','eNotes','eLocation','eTravel'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('eTotalHrs').value = '8';
+  document.getElementById('eStart').value    = '09:30';
+  document.getElementById('eEnd').value      = '17:30';
   document.getElementById('eBankHol').checked = false;
   document.getElementById('tNotes').value = '';
   onDateChange();
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DELETE — soft delete via deleteTilEntry
+// DELETE
 // ═══════════════════════════════════════════════════════════════
 async function deleteEntry(id) {
-  if (!confirm('Delete this entry? It will be hidden but kept in the spreadsheet for auditing.')) return;
+  if (!confirm('Delete this entry? It will be hidden but kept in the spreadsheet.')) return;
   setSyncState('saving', 'Deleting…');
   try {
     const data = await apiCall({ action: 'deleteTilEntry', id });
     if (!data.success) throw new Error(data.error);
     toast('Entry deleted', 'success');
     await loadFromSheet();
+    // Refresh admin view if open
+    if (currentView === 'admin' && selectedAdminTrainer) {
+      const ents = allTrainerData[selectedAdminTrainer] || [];
+      allTrainerData[selectedAdminTrainer] = ents.filter(e => e.id !== id);
+      renderAdminEntries(allTrainerData[selectedAdminTrainer]);
+    }
   } catch (err) {
-    console.error('[TiL] deleteEntry:', err.message);
     toast('Delete failed: ' + err.message, 'error');
     setSyncState('error', 'Error');
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// APPROVAL — approve a TiL Taken entry
-// Approver list is built from the live USERS data, not hardcoded.
+// APPROVAL — only admins/managers can approve
 // ═══════════════════════════════════════════════════════════════
-function openApprovalModal(id) {
-  pendingApprovalId = id;
+function openApprovalModal(id, trainerName) {
+  if (!canApprove()) { toast('Only admins and managers can approve TiL requests', 'error'); return; }
+  pendingApprovalId      = id;
+  pendingApprovalTrainer = trainerName || (currentUser && currentUser.name);
   const list = document.getElementById('approverList');
   list.innerHTML = '';
 
-  // Build approvers from live USERS list, exclude the current user,
-  // and always add Line Manager as an option
-  const approvers = [
-    ...USERS.filter(u => u.name !== (currentUser && currentUser.name)).map(u => u.name),
-    'Line Manager',
-  ];
+  // Build approvers: only admins/managers
+  const approvers = USERS
+    .filter(u => isAdmin(u) && u.name !== pendingApprovalTrainer)
+    .map(u => u.name);
+  if (!approvers.length) approvers.push('Line Manager');
 
   approvers.forEach(name => {
     const btn = document.createElement('button');
     btn.className = 'approver-btn';
-    const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     btn.innerHTML = `<div class="approver-avatar">${initials}</div>${name}`;
     btn.onclick = () => confirmApproval(name);
     list.appendChild(btn);
   });
-
   document.getElementById('approvalModal').classList.add('open');
 }
-
 function closeModal() {
-  pendingApprovalId = null;
+  pendingApprovalId = null; pendingApprovalTrainer = null;
   document.getElementById('approvalModal').classList.remove('open');
 }
-
 async function confirmApproval(approver) {
   closeModal();
   setSyncState('saving', 'Approving…');
   try {
-    const data = await apiCall({
-      action: 'approveTilEntry',
-      id: pendingApprovalId,
-      approvedBy: approver,
-    });
+    const data = await apiCall({ action:'approveTilEntry', id:pendingApprovalId, approvedBy:approver });
     if (!data.success) throw new Error(data.error);
     toast(`Approved by ${approver} ✓`, 'success');
     await loadFromSheet();
+    // If in admin view, also refresh that trainer's entries
+    if (currentView === 'admin' && selectedAdminTrainer) {
+      const refreshData = await apiCall({ action:'getTilLog', trainer: selectedAdminTrainer });
+      if (refreshData.success) {
+        allTrainerData[selectedAdminTrainer] = refreshData.entries || [];
+        selectAdminTrainer(selectedAdminTrainer);
+      }
+    }
   } catch (err) {
-    console.error('[TiL] confirmApproval:', err.message);
     toast('Approval failed: ' + err.message, 'error');
     setSyncState('error', 'Error');
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RENDER
+// RENDER HELPERS
+// ═══════════════════════════════════════════════════════════════
+function buildEntryRow(e, isAdminView) {
+  const isTaken     = e.tilTaken === 'Y';
+  const typeBadge   = isTaken
+    ? '<span class="badge badge-taken">Taken</span>'
+    : '<span class="badge badge-earned">Earned</span>';
+  const statusBadge = e.approvalStatus === 'Approved'
+    ? '<span class="badge badge-approved">✓ Approved</span>'
+    : '<span class="badge badge-pending">● Pending</span>';
+  const approvedMeta = e.approvedBy ? `<div class="approval-meta">by ${e.approvedBy}</div>` : '';
+  const dateStr = e.date ? new Date(e.date+'T00:00:00').toLocaleDateString('en-GB') : '—';
+  const dayStr  = e.day  ? `<span style="font-size:11px;color:var(--text--dark--30)"> ${e.day}</span>` : '';
+
+  // Approve button: only shown to admins, only for pending taken entries
+  const approveBtn = (isTaken && e.approvalStatus === 'Pending' && canApprove())
+    ? `<button class="btn btn-approve btn-sm" onclick="openApprovalModal('${e.id}','${(isAdminView ? selectedAdminTrainer : (currentUser&&currentUser.name)||'').replace(/'/g,"\\'") }')">Approve</button>`
+    : '';
+
+  // Delete button: admins can delete anyone's; trainers can only delete their own earned (not pending taken)
+  const canDelete = canApprove() || (!isTaken && !isAdminView);
+  const deleteBtn = canDelete
+    ? `<button class="btn-delete" onclick="deleteEntry('${e.id}')">Delete</button>`
+    : '';
+
+  if (isTaken) {
+    return `<tr>
+      <td>${dateStr}${dayStr}</td>
+      <td>${typeBadge}</td>
+      <td style="color:var(--text--dark--30)">${e.notes||'—'}</td>
+      <td style="color:var(--text--dark--20)">—</td>
+      <td style="color:var(--text--dark--20)">—</td>
+      <td style="color:var(--text--dark--20)">—</td>
+      <td style="color:var(--text--dark--20)">—</td>
+      <td><span class="hours-neg">-${(e.hrsUsed||0).toFixed(2)} hrs</span></td>
+      <td>${statusBadge}${approvedMeta}</td>
+      <td><div class="td-actions">${approveBtn}${deleteBtn}</div></td>
+    </tr>`;
+  } else {
+    return `<tr>
+      <td>${dateStr}${dayStr}</td>
+      <td>${typeBadge}<div style="font-size:11px;color:var(--text--dark--30);margin-top:2px">${e.typeOfWork||''}</div></td>
+      <td>${e.client||'<span style="color:var(--text--dark--20)">—</span>'}</td>
+      <td>${e.totalHrs ? Number(e.totalHrs).toFixed(2) : '—'}</td>
+      <td>${e.otHrs   ? Number(e.otHrs).toFixed(2)    : '—'}</td>
+      <td>×${(e.multiplier||1).toFixed(1)}</td>
+      <td><span class="hours-pos">${e.tilEarned ? Number(e.tilEarned).toFixed(2)+' hrs' : '—'}</span></td>
+      <td style="color:var(--text--dark--20)">—</td>
+      <td>${statusBadge}${approvedMeta}</td>
+      <td><div class="td-actions">${deleteBtn}</div></td>
+    </tr>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER ALL (My TiL)
 // ═══════════════════════════════════════════════════════════════
 function renderAll() {
   renderKPIs();
@@ -1165,127 +1408,69 @@ function renderKPIs() {
   const approvedEarned = entries.filter(e => e.tilTaken !== 'Y' && e.approvalStatus === 'Approved').length;
   const takenCount     = entries.filter(e => e.tilTaken === 'Y'  && e.approvalStatus === 'Approved').length;
   const pendingCount   = entries.filter(e => e.tilTaken === 'Y'  && e.approvalStatus === 'Pending').length;
-
-  document.getElementById('kpiBalance').textContent    = balance.toFixed(2) + ' hrs';
-  document.getElementById('kpiBalance').className      = 'kpi-value ' + (balance < 0 ? 'red' : 'blue');
-  document.getElementById('kpiBalanceSub').textContent  = balance < 0 ? 'Deficit — time owed' : 'Available to take';
-  document.getElementById('kpiAccrued').textContent    = accrued.toFixed(2) + ' hrs';
+  document.getElementById('kpiBalance').textContent    = balance.toFixed(2)+' hrs';
+  document.getElementById('kpiBalance').className      = 'kpi-value '+(balance<0?'red':'blue');
+  document.getElementById('kpiBalanceSub').textContent  = balance<0 ? 'Deficit — time owed' : 'Available to take';
+  document.getElementById('kpiAccrued').textContent    = accrued.toFixed(2)+' hrs';
   document.getElementById('kpiAccruedSub').textContent  = `${approvedEarned} approved entries`;
-  document.getElementById('kpiTaken').textContent      = taken.toFixed(2) + ' hrs';
+  document.getElementById('kpiTaken').textContent      = taken.toFixed(2)+' hrs';
   document.getElementById('kpiTakenSub').textContent    = `${takenCount} approved entries`;
   document.getElementById('kpiPending').textContent    = String(pendingCount);
   document.getElementById('kpiPendingSub').textContent  = pendingCount ? `${pendingCount} awaiting sign-off` : 'All up to date';
-  document.getElementById('kpiTravel').textContent     = travel.toFixed(2) + ' hrs';
-  document.getElementById('pageSub').textContent       =
-    `Time in Lieu balance — ${balance.toFixed(2)} hrs available`;
+  document.getElementById('kpiTravel').textContent     = travel.toFixed(2)+' hrs';
+  document.getElementById('pageSub').textContent       = `Time in Lieu balance — ${balance.toFixed(2)} hrs available`;
 }
 
 function renderChart() {
-  const sorted = [...entries]
-    .filter(e => e.approvalStatus === 'Approved')
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
-
+  const sorted = [...entries].filter(e => e.approvalStatus==='Approved').sort((a,b)=>new Date(a.date)-new Date(b.date));
   let running = 0;
-  const labels = [], data = [];
+  const labels=[], data=[];
   for (const e of sorted) {
-    running += e.tilTaken === 'Y' ? -(e.hrsUsed || 0) : (e.tilEarned || 0);
-    const d = e.date ? new Date(e.date + 'T00:00:00') : null;
-    labels.push(d ? d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '');
+    running += e.tilTaken==='Y' ? -(e.hrsUsed||0) : (e.tilEarned||0);
+    const d = e.date ? new Date(e.date+'T00:00:00') : null;
+    labels.push(d ? d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : '');
     data.push(parseFloat(running.toFixed(2)));
   }
-
   const cfg = {
-    type: 'line',
-    data: { labels, datasets: [{ label: 'TiL Balance (hrs)', data,
-      borderColor: '#2147f4', backgroundColor: 'rgba(33,71,244,0.06)',
-      borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#2147f4',
-      tension: 0.3, fill: true }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#a8aabb', font: { size: 10 } } },
-        y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#a8aabb', font: { size: 10 } } },
+    type:'line',
+    data:{labels,datasets:[{label:'TiL Balance (hrs)',data,
+      borderColor:'#2147f4',backgroundColor:'rgba(33,71,244,0.06)',
+      borderWidth:2,pointRadius:3,pointBackgroundColor:'#2147f4',tension:0.3,fill:true}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#a8aabb',font:{size:10,family:'DM Sans'}}},
+        y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#a8aabb',font:{size:10,family:'DM Sans'}}},
       },
     },
   };
-
-  if (!chart) {
-    chart = new Chart(document.getElementById('balanceChart').getContext('2d'), cfg);
-  } else {
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = data;
-    chart.update();
-  }
+  if (!chart) { chart = new Chart(document.getElementById('balanceChart').getContext('2d'), cfg); }
+  else { chart.data.labels=labels; chart.data.datasets[0].data=data; chart.update(); }
 }
 
 function setFilter(f, el) {
   activeFilter = f;
-  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#myTilView .filter-tab').forEach(t => t.classList.remove('active'));
   if (el) el.classList.add('active');
   renderTable();
 }
 
 function renderTable() {
-  let rows = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
-  if (activeFilter === 'earned')  rows = rows.filter(e => e.tilTaken !== 'Y');
-  if (activeFilter === 'taken')   rows = rows.filter(e => e.tilTaken === 'Y');
-  if (activeFilter === 'pending') rows = rows.filter(e => e.approvalStatus === 'Pending');
-
+  let rows = [...entries].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if (activeFilter==='earned')  rows = rows.filter(e=>e.tilTaken!=='Y');
+  if (activeFilter==='taken')   rows = rows.filter(e=>e.tilTaken==='Y');
+  if (activeFilter==='pending') rows = rows.filter(e=>e.approvalStatus==='Pending');
   const tbody = document.getElementById('entriesTbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div>No entries found</div></td></tr>';
+    tbody.innerHTML='<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div>No entries found</div></td></tr>';
     return;
   }
-
-  tbody.innerHTML = rows.map(e => {
-    const isTaken     = e.tilTaken === 'Y';
-    const typeBadge   = isTaken
-      ? '<span class="badge badge-taken">Taken</span>'
-      : '<span class="badge badge-earned">Earned</span>';
-    const statusBadge = e.approvalStatus === 'Approved'
-      ? '<span class="badge badge-approved">✓ Approved</span>'
-      : '<span class="badge badge-pending">● Pending</span>';
-    const approvedMeta = e.approvedBy
-      ? `<div class="approval-meta">by ${e.approvedBy}</div>` : '';
-    const approveBtn = (isTaken && e.approvalStatus === 'Pending')
-      ? `<button class="btn btn-approve btn-sm" onclick="openApprovalModal('${e.id}')">Approve</button>` : '';
-    const deleteBtn = `<button class="btn-delete" onclick="deleteEntry('${e.id}')">Delete</button>`;
-    const dateStr   = e.date ? new Date(e.date + 'T00:00:00').toLocaleDateString('en-GB') : '—';
-    const dayStr    = e.day  ? `<span style="font-size:11px;color:var(--text--dark--30);"> ${e.day}</span>` : '';
-
-    if (isTaken) {
-      return `<tr>
-        <td>${dateStr}${dayStr}</td>
-        <td>${typeBadge}</td>
-        <td style="color:var(--text--dark--30)">${e.notes || '—'}</td>
-        <td style="color:var(--text--dark--20)">—</td>
-        <td style="color:var(--text--dark--20)">—</td>
-        <td style="color:var(--text--dark--20)">—</td>
-        <td style="color:var(--text--dark--20)">—</td>
-        <td><span class="hours-neg">-${(e.hrsUsed || 0).toFixed(2)} hrs</span></td>
-        <td>${statusBadge}${approvedMeta}</td>
-        <td><div class="td-actions">${approveBtn}${deleteBtn}</div></td>
-      </tr>`;
-    } else {
-      return `<tr>
-        <td>${dateStr}${dayStr}</td>
-        <td>${typeBadge}<div style="font-size:11px;color:var(--text--dark--30);margin-top:2px">${e.typeOfWork || ''}</div></td>
-        <td>${e.client || '<span style="color:var(--text--dark--20)">—</span>'}</td>
-        <td>${e.totalHrs ? Number(e.totalHrs).toFixed(2) : '—'}</td>
-        <td>${e.otHrs   ? Number(e.otHrs).toFixed(2)    : '—'}</td>
-        <td>×${(e.multiplier || 1).toFixed(1)}</td>
-        <td><span class="hours-pos">${e.tilEarned ? Number(e.tilEarned).toFixed(2) + ' hrs' : '—'}</span></td>
-        <td style="color:var(--text--dark--20)">—</td>
-        <td>${statusBadge}${approvedMeta}</td>
-        <td><div class="td-actions">${deleteBtn}</div></td>
-      </tr>`;
-    }
-  }).join('');
+  tbody.innerHTML = rows.map(e => buildEntryRow(e, false)).join('');
 }
 
 function showEmpty(msg) {
-  document.getElementById('entriesTbody').innerHTML =
+  document.getElementById('entriesTbody').innerHTML=
     `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">⚠️</div>${msg}</div></td></tr>`;
 }
 
@@ -1294,15 +1479,13 @@ function showEmpty(msg) {
 // ═══════════════════════════════════════════════════════════════
 function setSyncState(state, label) {
   const dot = document.getElementById('syncDot');
-  dot.className = 'sync-dot ' + (state === 'ok' ? 'ok' : state === 'saving' ? 'saving' : 'error');
+  dot.className = 'sync-dot ' + (state==='ok'?'ok':state==='saving'?'saving':'error');
   document.getElementById('syncLabel').textContent = label;
 }
-
-function toast(msg, type = 'success') {
+function toast(msg, type='success') {
   const wrap = document.getElementById('toastWrap');
   const div  = document.createElement('div');
-  div.className = `toast ${type}`;
-  div.textContent = msg;
+  div.className = `toast ${type}`; div.textContent = msg;
   wrap.appendChild(div);
   setTimeout(() => div.remove(), 3500);
 }
