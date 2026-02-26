@@ -590,8 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ═══════════════════════════════════════════════════════════════
 // LOAD USERS FROM SHEET
 // Fetches the Users tab via getUsers and populates TRAINERS with
-// real names + PINs from col K. Only active trainers and admins
-// are included (they're the ones who use the TiL tracker).
+// real names + PINs from col K. All active users are included.
 // ═══════════════════════════════════════════════════════════════
 async function loadUsersFromSheet() {
   // Show a subtle loading state on the login sub-label
@@ -603,9 +602,9 @@ async function loadUsersFromSheet() {
     const data = await resp.json();
 
     if (data.success && data.users) {
-      // Only include active users who are trainers or admins
+      // Include all active users from the Users sheet
       TRAINERS = data.users
-        .filter(u => u.active && (u.role === 'trainer' || u.role === 'admin'))
+        .filter(u => u.active)
         .map(u => ({
           name: u.name,
           pin:  u.pin || '',   // col K from the Users sheet
