@@ -248,10 +248,17 @@ tbody tr:hover td{background:var(--card-light-grey);}
     <!-- Step 1: Name search -->
     <div id="loginStep1">
       <div class="login-welcome">Welcome back</div>
-      <div class="login-sub" id="loginSub1">Search for your name to continue</div>
+      <div class="login-sub" id="loginSub1">Connecting to sheet…</div>
+
+      <!-- Diagnostic status strip — shown while loading / on error -->
+      <div id="loginStatus" style="margin-bottom:14px;padding:10px 12px;border-radius:6px;background:#f8f8f8;border:1px solid #e5e5e5;font-size:12px;color:#4c4d57;display:flex;align-items:center;gap:8px;">
+        <div id="loginStatusDot" style="width:8px;height:8px;border-radius:50%;background:#f1c238;flex-shrink:0;animation:pulse .8s ease infinite;"></div>
+        <span id="loginStatusText">Connecting to Users sheet…</span>
+      </div>
+
       <div class="name-search-wrap">
         <input class="name-search-input" id="nameSearchInput" type="text" placeholder="Your name" autocomplete="off"
-          oninput="onNameSearch()" onfocus="onNameSearch()">
+          oninput="onNameSearch()" onfocus="onNameSearch()" disabled>
         <div class="name-suggestions" id="nameSuggestions"></div>
       </div>
       <div style="margin-top:16px;">
@@ -534,29 +541,39 @@ tbody tr:hover td{background:var(--card-light-grey);}
 // ═══════════════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════════════
-const API_URL      = 'https://script.google.com/macros/s/AKfycbzCvBhFSPyyoaVsui0DCxvGQQa0V7e_UCJ5LfqvcSysTHTFlNRcx4ewlET5TyouJ0ZYow/exec';
-const ALL_APPROVERS = ['Amy Dawber','Max Hornby','Matt Hinawski','Jess','Line Manager'];
-const LS_TRAINER   = 'til_trainer';
-const LS_CACHE     = 'til_v2_cache';
-const DAY_NAMES    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
-// Trainers are loaded dynamically from the Users sheet (getUsers action).
-// This array is populated on page load — do not hardcode PINs here.
-let TRAINERS = [];  // { name, pin, role } — filled by loadUsersFromSheet()
+const API_URL    = 'https://script.google.com/macros/s/AKfycbzCvBhFSPyyoaVsui0DCxvGQQa0V7e_UCJ5LfqvcSysTHTFlNRcx4ewlET5TyouJ0ZYow/exec';
+const LS_TRAINER = 'til_trainer';
+const LS_CACHE   = 'til_v2_cache';
+const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 // ═══════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════
-let currentTrainer    = null;
-let entries           = [];
-let activeFilter      = 'all';
+let USERS        = [];   // all active users loaded from Users sheet
+let currentUser  = null; // { name, pin, role } of logged-in user
+let entries      = [];
+let activeFilter = 'all';
 let pendingApprovalId = null;
-let chart             = null;
-let currentType       = 'earned';
+let chart        = null;
+let currentType  = 'earned';
+let loginSelectedUser = null;
+let pinEntry     = '';
 
-// login state
-let loginSelectedTrainer = null;
-let pinEntry             = '';
+// ═══════════════════════════════════════════════════════════════
+// HELPERS — all fetch calls go through apiCall() which handles
+// the Apps Script redirect and gives back parsed JSON or throws.
+// ═══════════════════════════════════════════════════════════════
+async function apiCall(params) {
+  const url = `${API_URL}?${new URLSearchParams(params).toString()}`;
+  const resp = await fetch(url, { redirect: 'follow' });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const text = await resp.text();
+  try {
+    return JSON.parse(text);
+  } catch (_) {
+    throw new Error('Bad JSON from server: ' + text.slice(0, 120));
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════
 // INIT
@@ -566,112 +583,163 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('eDate').value = today;
   document.getElementById('tDate').value = today;
 
-  document.addEventListener('click', e => {
-    if (!document.getElementById('hmbBtn').contains(e.target) &&
-        !document.getElementById('navMenu').contains(e.target)) closeMenu();
-    if (!document.getElementById('nameSearchInput').contains(e.target) &&
-        !document.getElementById('nameSuggestions').contains(e.target)) {
+  document.addEventListener('click', ev => {
+    if (!document.getElementById('hmbBtn').contains(ev.target) &&
+        !document.getElementById('navMenu').contains(ev.target)) closeMenu();
+    if (!document.getElementById('nameSearchInput').contains(ev.target) &&
+        !document.getElementById('nameSuggestions').contains(ev.target))
       document.getElementById('nameSuggestions').classList.remove('open');
-    }
   });
 
-  // Load users from sheet first, then check for saved session
-  loadUsersFromSheet().then(() => {
-    const saved   = localStorage.getItem(LS_TRAINER);
-    const trainer = saved ? TRAINERS.find(t => t.name === saved) : null;
-    if (trainer) {
-      loginSuccess(trainer.name);
-    } else {
-      showLoginScreen();
-    }
-  });
+  bootApp();
 });
 
-// ═══════════════════════════════════════════════════════════════
-// LOAD USERS FROM SHEET
-// Fetches the Users tab via getUsers and populates TRAINERS with
-// real names + PINs from col K. All active users are included.
-// ═══════════════════════════════════════════════════════════════
-async function loadUsersFromSheet() {
-  // Show a subtle loading state on the login sub-label
-  const subEl = document.getElementById('loginSub1');
-  if (subEl) subEl.textContent = 'Loading users…';
+async function bootApp() {
+  // Always fetch fresh users on load so PINs are live from the sheet
+  const ok = await loadUsers();
+  if (!ok) return; // loadUsers shows its own error UI
 
-  try {
-    const resp = await fetch(`${API_URL}?action=getUsers`);
-    const data = await resp.json();
-
-    if (data.success && data.users) {
-      // Include all active users from the Users sheet
-      TRAINERS = data.users
-        .filter(u => u.active)
-        .map(u => ({
-          name: u.name,
-          pin:  u.pin || '',   // col K from the Users sheet
-          role: u.role,
-        }));
-    }
-  } catch (err) {
-    console.warn('Could not load users from sheet:', err.message);
-    // Fall back to a minimal list so the screen isn't broken
-    // PINs will be blank — user will see "No PIN set" message
-    TRAINERS = [];
+  const saved = localStorage.getItem(LS_TRAINER);
+  const user  = saved ? USERS.find(u => u.name === saved) : null;
+  if (user) {
+    doLoginSuccess(user.name);
+  } else {
+    showLoginScreen();
   }
-
-  if (subEl) subEl.textContent = 'Search for your name to continue';
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LOGIN FLOW
+// LOAD USERS FROM SHEET
+// Calls getUsers action → Users tab → returns all active users
+// with their name (B+C), role (E), and PIN (K).
+// ═══════════════════════════════════════════════════════════════
+async function loadUsers() {
+  setLoginStatus('loading', 'Connecting to Users sheet…');
+
+  try {
+    const data = await apiCall({ action: 'getUsers' });
+
+    if (!data.success) throw new Error(data.error || 'getUsers returned success:false');
+
+    USERS = (data.users || [])
+      .filter(u => u.active !== false)
+      .map(u => ({
+        name: (u.name || '').trim(),
+        // PIN from col K — sheet may store as number, cast to string
+        pin:  String(u.pin || '').trim(),
+        role: (u.role || 'viewer').trim().toLowerCase(),
+      }))
+      .filter(u => u.name); // drop any blank-name rows
+
+    console.log('[TiL] Loaded', USERS.length, 'users from sheet:', USERS.map(u => u.name));
+
+    if (USERS.length === 0) {
+      setLoginStatus('warn', 'No active users found in Users sheet — check the sheet has data.');
+      return false;
+    }
+
+    setLoginStatus('ok', `${USERS.length} users loaded — search for your name`);
+    document.getElementById('loginSub1').textContent = 'Search for your name to continue';
+    document.getElementById('nameSearchInput').disabled = false;
+    document.getElementById('nameSearchInput').focus();
+    return true;
+
+  } catch (err) {
+    console.error('[TiL] loadUsers failed:', err.message);
+    setLoginStatus('error',
+      `Could not reach the sheet: ${err.message} — ` +
+      '<a href="#" onclick="bootApp();return false;" style="color:#c0392b;font-weight:700;text-decoration:underline;">Retry</a>'
+    );
+    document.getElementById('loginScreen').classList.remove('hidden');
+    return false;
+  }
+}
+
+function setLoginStatus(state, html) {
+  const strip = document.getElementById('loginStatus');
+  const dot   = document.getElementById('loginStatusDot');
+  const text  = document.getElementById('loginStatusText');
+  if (!strip) return;
+
+  strip.style.display = 'flex';
+  text.innerHTML = html;
+
+  const styles = {
+    loading: { bg: '#f8f8f8', border: '#e5e5e5', color: '#4c4d57', dot: '#f1c238', anim: 'pulse .8s ease infinite' },
+    ok:      { bg: '#f0faf3', border: '#8fd4a8', color: '#1a6632', dot: '#4caf50', anim: 'none' },
+    warn:    { bg: '#fffbeb', border: '#fde047', color: '#854d0e', dot: '#f59e0b', anim: 'none' },
+    error:   { bg: '#fef2f2', border: '#f9b4bc', color: '#9e2a35', dot: '#c0392b', anim: 'none' },
+  };
+  const s = styles[state] || styles.loading;
+  strip.style.background = s.bg;
+  strip.style.borderColor = s.border;
+  strip.style.color = s.color;
+  dot.style.background = s.dot;
+  dot.style.animation = s.anim;
+
+  // Hide strip after 3s once successfully loaded
+  if (state === 'ok') setTimeout(() => { strip.style.display = 'none'; }, 3000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOGIN — step 1: name search
 // ═══════════════════════════════════════════════════════════════
 function showLoginScreen() {
   document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('loginStep1').style.display = '';
+  document.getElementById('loginStep2').style.display = 'none';
   document.getElementById('nameSearchInput').value = '';
+  document.getElementById('nameSearchInput').disabled = false; // users already loaded
   document.getElementById('nameSuggestions').classList.remove('open');
-  loginSelectedTrainer = null;
   document.getElementById('continueBtn').disabled = true;
+  loginSelectedUser = null;
   setTimeout(() => document.getElementById('nameSearchInput').focus(), 100);
 }
 
 function onNameSearch() {
   const q = document.getElementById('nameSearchInput').value.trim().toLowerCase();
-  const suggestions = document.getElementById('nameSuggestions');
+  const sugEl = document.getElementById('nameSuggestions');
 
-  // Reset selection if they type again
-  loginSelectedTrainer = null;
+  loginSelectedUser = null;
   document.getElementById('continueBtn').disabled = true;
 
-  if (!q) { suggestions.classList.remove('open'); return; }
+  if (!q) { sugEl.classList.remove('open'); return; }
 
-  const matches = TRAINERS.filter(t => t.name.toLowerCase().includes(q));
+  const matches = USERS.filter(u => u.name.toLowerCase().includes(q));
+
   if (!matches.length) {
-    suggestions.innerHTML = `<div class="no-match">No matching users found.</div>`;
-    suggestions.classList.add('open');
+    sugEl.innerHTML = '<div class="no-match">No matching users found.</div>';
+    sugEl.classList.add('open');
     return;
   }
 
-  suggestions.innerHTML = matches.map(t => {
-    const initials = t.name.split(' ').map(w=>w[0]).join('').slice(0,2);
-    return `<div class="name-suggestion-item" onclick="selectTrainer('${t.name}')">
-      <div class="suggestion-avatar">${initials}</div>${t.name}
+  sugEl.innerHTML = matches.map(u => {
+    const initials = u.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    // Escape single quotes in name for the onclick
+    const safeName = u.name.replace(/'/g, "\\'");
+    return `<div class="name-suggestion-item" onclick="selectUser('${safeName}')">
+      <div class="suggestion-avatar">${initials}</div>${u.name}
     </div>`;
   }).join('');
-  suggestions.classList.add('open');
+  sugEl.classList.add('open');
 }
 
-function selectTrainer(name) {
-  loginSelectedTrainer = name;
+function selectUser(name) {
+  loginSelectedUser = USERS.find(u => u.name === name) || null;
   document.getElementById('nameSearchInput').value = name;
   document.getElementById('nameSuggestions').classList.remove('open');
-  document.getElementById('continueBtn').disabled = false;
+  document.getElementById('continueBtn').disabled = !loginSelectedUser;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// LOGIN — step 2: PIN pad
+// ═══════════════════════════════════════════════════════════════
 function goToPin() {
-  if (!loginSelectedTrainer) return;
+  if (!loginSelectedUser) return;
   pinEntry = '';
-  updatePinDisplay();
+  updatePinDots();
   document.getElementById('pinError').textContent = '';
-  const first = loginSelectedTrainer.split(' ')[0];
+  const first = loginSelectedUser.name.split(' ')[0];
   document.getElementById('pinGreeting').textContent = `Hi, ${first} 👋`;
   document.getElementById('loginStep1').style.display = 'none';
   document.getElementById('loginStep2').style.display = '';
@@ -685,67 +753,66 @@ function backToName() {
 
 function numpadPress(key) {
   if (key === 'back') {
-    pinEntry = pinEntry.slice(0,-1);
-    updatePinDisplay();
+    pinEntry = pinEntry.slice(0, -1);
+    updatePinDots();
     document.getElementById('pinError').textContent = '';
     return;
   }
   if (pinEntry.length >= 4) return;
   pinEntry += key;
-  updatePinDisplay();
-  if (pinEntry.length === 4) {
-    setTimeout(checkPin, 120); // slight delay so last dot fills before check
-  }
+  updatePinDots();
+  if (pinEntry.length === 4) setTimeout(checkPin, 150);
 }
 
-function updatePinDisplay() {
-  for (let i=0;i<4;i++) {
-    const dot = document.getElementById('pd'+i);
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('pd' + i);
     dot.classList.toggle('filled', i < pinEntry.length);
     dot.classList.remove('error');
   }
 }
 
 function checkPin() {
-  const trainer = TRAINERS.find(t => t.name === loginSelectedTrainer);
+  if (!loginSelectedUser) return;
 
-  // PIN comes from col K of the Users sheet, loaded via getUsers on startup
-  const correctPin = trainer ? trainer.pin : '';
+  const correctPin = loginSelectedUser.pin;
+
+  // Debug: log (remove once confirmed working)
+  console.log('[TiL] checkPin — entered:', pinEntry, '| sheet PIN:', correctPin,
+              '| match:', pinEntry === correctPin);
 
   if (!correctPin) {
-    // No PIN set for this user in the sheet
-    document.getElementById('pinError').textContent = 'No PIN set — ask an admin to add one in the Users sheet (col K)';
+    document.getElementById('pinError').textContent =
+      'No PIN set for this user — add one to col K in the Users sheet';
     setTimeout(() => {
       pinEntry = '';
-      updatePinDisplay();
+      updatePinDots();
       document.getElementById('pinError').textContent = '';
-    }, 2500);
+    }, 2800);
     return;
   }
 
   if (pinEntry === correctPin) {
-    loginSuccess(loginSelectedTrainer);
+    doLoginSuccess(loginSelectedUser.name);
   } else {
-    for (let i = 0; i < 4; i++) document.getElementById('pd'+i).classList.add('error');
+    for (let i = 0; i < 4; i++) document.getElementById('pd' + i).classList.add('error');
     document.getElementById('pinError').textContent = 'Incorrect PIN — try again';
     setTimeout(() => {
       pinEntry = '';
-      updatePinDisplay();
+      updatePinDots();
       document.getElementById('pinError').textContent = '';
     }, 1200);
   }
 }
 
-function loginSuccess(name) {
-  currentTrainer = name;
+function doLoginSuccess(name) {
+  currentUser = USERS.find(u => u.name === name) || { name, pin: '', role: 'viewer' };
   localStorage.setItem(LS_TRAINER, name);
 
-  // Update header
-  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2);
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   document.getElementById('hdrAvatar').textContent = initials;
   document.getElementById('hdrName').textContent   = name;
-  document.getElementById('pageTitle').textContent  = name;
-
+  document.getElementById('pageTitle').textContent = name;
   document.getElementById('loginScreen').classList.add('hidden');
 
   onDateChange();
@@ -755,13 +822,13 @@ function loginSuccess(name) {
 
 function signOut() {
   if (!confirm('Sign out of the TiL Tracker?')) return;
-  currentTrainer = null;
+  currentUser = null;
   entries = [];
   localStorage.removeItem(LS_TRAINER);
   if (chart) { chart.destroy(); chart = null; }
   setSyncState('', 'Not signed in');
-  // Re-fetch users so PINs are always fresh when returning to login
-  loadUsersFromSheet().then(() => showLoginScreen());
+  // Re-fetch users on sign out so PINs are always fresh
+  bootApp();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -777,39 +844,48 @@ function closeMenu() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DATA
+// DATA — load from sheet (getTilLog) and cache
 // ═══════════════════════════════════════════════════════════════
 function loadFromCache() {
   try {
     const d = JSON.parse(localStorage.getItem(LS_CACHE) || '{}');
-    if (d[currentTrainer]) { entries = d[currentTrainer]; renderAll(); }
-  } catch {}
+    const name = currentUser && currentUser.name;
+    if (name && d[name]) { entries = d[name]; renderAll(); }
+  } catch (_) {}
 }
 
 async function loadFromSheet() {
-  setSyncState('saving','Syncing&#8230;');
+  setSyncState('saving', 'Syncing…');
   try {
-    const url  = `${API_URL}?action=getTilLog&trainer=${encodeURIComponent(currentTrainer)}`;
-    const resp = await fetch(url);
-    const data = await resp.json();
-    if (!data.success) throw new Error(data.error || 'API error');
+    const name = currentUser && currentUser.name;
+    if (!name) return;
+
+    const data = await apiCall({ action: 'getTilLog', trainer: name });
+    if (!data.success) throw new Error(data.error || 'getTilLog failed');
+
     entries = data.entries || [];
     saveCache();
     renderAll();
-    setSyncState('ok', 'Synced ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}));
-  } catch(err) {
-    setSyncState('error','Offline — showing cache');
-    if (!entries.length) showEmpty('Could not connect to Google Sheets. Check your connection and try Refresh.');
-    toast('Could not reach Google Sheets','error');
+    setSyncState('ok', 'Synced ' +
+      new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
+
+  } catch (err) {
+    console.error('[TiL] loadFromSheet:', err.message);
+    setSyncState('error', 'Offline — showing cache');
+    if (!entries.length)
+      showEmpty('Could not connect to Google Sheets. Check your connection and click Refresh.');
+    toast('Could not reach Google Sheets', 'error');
   }
 }
 
 function saveCache() {
   try {
+    const name = currentUser && currentUser.name;
+    if (!name) return;
     const d = JSON.parse(localStorage.getItem(LS_CACHE) || '{}');
-    d[currentTrainer] = entries;
+    d[name] = entries;
     localStorage.setItem(LS_CACHE, JSON.stringify(d));
-  } catch {}
+  } catch (_) {}
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -839,9 +915,9 @@ function calcHours() {
   const s = document.getElementById('eStart').value;
   const e = document.getElementById('eEnd').value;
   if (!s || !e) return;
-  const [sh,sm] = s.split(':').map(Number);
-  const [eh,em] = e.split(':').map(Number);
-  const total = ((eh*60+em)-(sh*60+sm))/60;
+  const [sh, sm] = s.split(':').map(Number);
+  const [eh, em] = e.split(':').map(Number);
+  const total = ((eh * 60 + em) - (sh * 60 + sm)) / 60;
   if (total > 0) document.getElementById('eTotalHrs').value = total.toFixed(2);
   calcTil();
 }
@@ -852,15 +928,14 @@ function calcTil() {
   const travel = parseFloat(document.getElementById('eTravel').value)   || 0;
   const bh     = document.getElementById('eBankHol').checked;
   const we     = document.getElementById('eWeekend').checked;
-
   const otHrs  = Math.max(0, total - std);
   const mult   = (bh && we) ? 2.0 : (bh || we) ? 1.5 : 1.0;
   const earned = parseFloat(((otHrs * mult) + travel).toFixed(2));
 
-  document.getElementById('prevTilEarned').textContent  = earned ? `${earned.toFixed(2)} hrs` : '—';
-  document.getElementById('prevOtHrs').textContent       = otHrs   ? `${otHrs.toFixed(2)} hrs` : '—';
-  document.getElementById('prevMultiplier').textContent  = `×${mult.toFixed(1)}`;
-  document.getElementById('prevBreakdown').textContent   = earned
+  document.getElementById('prevTilEarned').textContent = earned ? `${earned.toFixed(2)} hrs` : '—';
+  document.getElementById('prevOtHrs').textContent     = otHrs  ? `${otHrs.toFixed(2)} hrs`  : '—';
+  document.getElementById('prevMultiplier').textContent = `×${mult.toFixed(1)}`;
+  document.getElementById('prevBreakdown').textContent  = earned
     ? `(${otHrs.toFixed(2)} OT × ${mult.toFixed(1)}) + ${travel.toFixed(2)} travel` : '';
 }
 
@@ -908,17 +983,21 @@ function setType(type) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SUBMIT
+// SUBMIT — saves entry to the Time in Lieu Log sheet
 // ═══════════════════════════════════════════════════════════════
 async function submitEntry() {
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
 
   try {
+    const name = currentUser && currentUser.name;
+    if (!name) throw new Error('No user logged in');
+
     let params;
+
     if (currentType === 'earned') {
       const dateVal = document.getElementById('eDate').value;
-      if (!dateVal) { toast('Please select a date','error'); return; }
+      if (!dateVal) { toast('Please select a date', 'error'); return; }
 
       const total  = parseFloat(document.getElementById('eTotalHrs').value) || 0;
       const std    = parseFloat(document.getElementById('eStdHrs').value)   || 7.5;
@@ -929,8 +1008,8 @@ async function submitEntry() {
       const mult   = (bh && we) ? 2.0 : (bh || we) ? 1.5 : 1.0;
       const earned = parseFloat(((otHrs * mult) + travel).toFixed(2));
 
-      params = new URLSearchParams({
-        action: 'saveTilEntry', trainer: currentTrainer,
+      params = {
+        action: 'saveTilEntry', trainer: name,
         date: dateVal, day: getDay(dateVal),
         client:         document.getElementById('eClient').value,
         typeOfWork:     document.getElementById('eWorkType').value,
@@ -947,38 +1026,40 @@ async function submitEntry() {
         tilEarned:      earned.toFixed(2),
         approvalStatus: 'Approved',
         tilTaken:       'N',
-        dateUsed: '', hrsUsed: '0',
+        dateUsed:       '', hrsUsed: '0',
         notes:          document.getElementById('eNotes').value,
-      });
+      };
+
     } else {
       const dateVal = document.getElementById('tDate').value;
       const hrs     = document.getElementById('tHrs').value;
-      if (!dateVal || !hrs) { toast('Please fill in date and hours','error'); return; }
-      params = new URLSearchParams({
-        action: 'saveTilEntry', trainer: currentTrainer,
+      if (!dateVal || !hrs) { toast('Please fill in date and hours', 'error'); return; }
+
+      params = {
+        action: 'saveTilEntry', trainer: name,
         date: dateVal, day: getDay(dateVal),
-        typeOfWork: 'TiL Taken',
+        typeOfWork:     'TiL Taken',
         approvalStatus: 'Pending',
-        tilTaken: 'Y', dateUsed: dateVal, hrsUsed: hrs,
+        tilTaken:       'Y', dateUsed: dateVal, hrsUsed: hrs,
         tilEarned: '0', otHrs: '0', totalHrs: '0', stdHrs: '0',
-        notes: document.getElementById('tNotes').value,
-        client:'',location:'',startTime:'',endTime:'',travel:'0',multiplier:'1',bankHol:'N',weekend:'N',
-      });
+        notes:          document.getElementById('tNotes').value,
+        client: '', location: '', startTime: '', endTime: '',
+        travel: '0', multiplier: '1', bankHol: 'N', weekend: 'N',
+      };
     }
 
-    setSyncState('saving','Saving&#8230;');
-    const resp = await fetch(`${API_URL}?${params.toString()}`);
-    const data = await resp.json();
+    setSyncState('saving', 'Saving…');
+    const data = await apiCall(params);
+    if (!data.success) throw new Error(data.error || 'Save failed');
 
-    if (data.success) {
-      toast('Entry saved ✓','success');
-      resetForm();
-      await loadFromSheet();
-    } else throw new Error(data.error || 'Save failed');
+    toast('Entry saved ✓', 'success');
+    resetForm();
+    await loadFromSheet();
 
-  } catch(err) {
-    toast('Save failed: ' + err.message,'error');
-    setSyncState('error','Save failed');
+  } catch (err) {
+    console.error('[TiL] submitEntry:', err.message);
+    toast('Save failed: ' + err.message, 'error');
+    setSyncState('error', 'Save failed');
   } finally {
     btn.disabled = false;
     btn.textContent = 'Save Entry';
@@ -995,37 +1076,48 @@ function resetForm() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DELETE
+// DELETE — soft delete via deleteTilEntry
 // ═══════════════════════════════════════════════════════════════
 async function deleteEntry(id) {
   if (!confirm('Delete this entry? It will be hidden but kept in the spreadsheet for auditing.')) return;
-  setSyncState('saving','Deleting&#8230;');
+  setSyncState('saving', 'Deleting…');
   try {
-    const resp = await fetch(`${API_URL}?action=deleteTilEntry&id=${encodeURIComponent(id)}`);
-    const data = await resp.json();
-    if (data.success) { toast('Entry deleted','success'); await loadFromSheet(); }
-    else throw new Error(data.error);
-  } catch(err) {
-    toast('Delete failed: ' + err.message,'error');
-    setSyncState('error','Error');
+    const data = await apiCall({ action: 'deleteTilEntry', id });
+    if (!data.success) throw new Error(data.error);
+    toast('Entry deleted', 'success');
+    await loadFromSheet();
+  } catch (err) {
+    console.error('[TiL] deleteEntry:', err.message);
+    toast('Delete failed: ' + err.message, 'error');
+    setSyncState('error', 'Error');
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// APPROVAL
+// APPROVAL — approve a TiL Taken entry
+// Approver list is built from the live USERS data, not hardcoded.
 // ═══════════════════════════════════════════════════════════════
 function openApprovalModal(id) {
   pendingApprovalId = id;
   const list = document.getElementById('approverList');
   list.innerHTML = '';
-  ALL_APPROVERS.filter(a => a !== currentTrainer).forEach(a => {
+
+  // Build approvers from live USERS list, exclude the current user,
+  // and always add Line Manager as an option
+  const approvers = [
+    ...USERS.filter(u => u.name !== (currentUser && currentUser.name)).map(u => u.name),
+    'Line Manager',
+  ];
+
+  approvers.forEach(name => {
     const btn = document.createElement('button');
     btn.className = 'approver-btn';
-    const initial = a.split(' ').map(w=>w[0]).join('').slice(0,2);
-    btn.innerHTML = `<div class="approver-avatar">${initial}</div>${a}`;
-    btn.onclick = () => confirmApproval(a);
+    const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    btn.innerHTML = `<div class="approver-avatar">${initials}</div>${name}`;
+    btn.onclick = () => confirmApproval(name);
     list.appendChild(btn);
   });
+
   document.getElementById('approvalModal').classList.add('open');
 }
 
@@ -1036,16 +1128,20 @@ function closeModal() {
 
 async function confirmApproval(approver) {
   closeModal();
-  setSyncState('saving','Approving&#8230;');
+  setSyncState('saving', 'Approving…');
   try {
-    const url  = `${API_URL}?action=approveTilEntry&id=${encodeURIComponent(pendingApprovalId)}&approvedBy=${encodeURIComponent(approver)}`;
-    const resp = await fetch(url);
-    const data = await resp.json();
-    if (data.success) { toast(`Approved by ${approver} ✓`,'success'); await loadFromSheet(); }
-    else throw new Error(data.error);
-  } catch(err) {
-    toast('Approval failed: ' + err.message,'error');
-    setSyncState('error','Error');
+    const data = await apiCall({
+      action: 'approveTilEntry',
+      id: pendingApprovalId,
+      approvedBy: approver,
+    });
+    if (!data.success) throw new Error(data.error);
+    toast(`Approved by ${approver} ✓`, 'success');
+    await loadFromSheet();
+  } catch (err) {
+    console.error('[TiL] confirmApproval:', err.message);
+    toast('Approval failed: ' + err.message, 'error');
+    setSyncState('error', 'Error');
   }
 }
 
@@ -1057,7 +1153,7 @@ function renderAll() {
   renderChart();
   renderTable();
   updateTakenPreview();
-  document.getElementById('pageTitle').textContent = currentTrainer;
+  if (currentUser) document.getElementById('pageTitle').textContent = currentUser.name;
 }
 
 function renderKPIs() {
@@ -1076,39 +1172,36 @@ function renderKPIs() {
   document.getElementById('kpiPending').textContent    = String(pendingCount);
   document.getElementById('kpiPendingSub').textContent  = pendingCount ? `${pendingCount} awaiting sign-off` : 'All up to date';
   document.getElementById('kpiTravel').textContent     = travel.toFixed(2) + ' hrs';
-  document.getElementById('pageSub').textContent       = `Time in Lieu balance — ${balance.toFixed(2)} hrs available`;
+  document.getElementById('pageSub').textContent       =
+    `Time in Lieu balance — ${balance.toFixed(2)} hrs available`;
 }
 
 function renderChart() {
   const sorted = [...entries]
     .filter(e => e.approvalStatus === 'Approved')
-    .sort((a,b) => new Date(a.date)-new Date(b.date));
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   let running = 0;
   const labels = [], data = [];
   for (const e of sorted) {
-    running += e.tilTaken === 'Y' ? -(e.hrsUsed||0) : (e.tilEarned||0);
-    const d = e.date ? new Date(e.date+'T00:00:00') : null;
-    labels.push(d ? d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : '');
+    running += e.tilTaken === 'Y' ? -(e.hrsUsed || 0) : (e.tilEarned || 0);
+    const d = e.date ? new Date(e.date + 'T00:00:00') : null;
+    labels.push(d ? d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '');
     data.push(parseFloat(running.toFixed(2)));
   }
 
   const cfg = {
-    type:'line',
-    data:{ labels, datasets:[{
-      label:'TiL Balance (hrs)', data,
-      borderColor:'#2147f4',
-      backgroundColor:'rgba(33,71,244,0.06)',
-      borderWidth:2, pointRadius:3,
-      pointBackgroundColor:'#2147f4',
-      tension:0.3, fill:true,
-    }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#a8aabb',font:{size:10}}},
-        y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#a8aabb',font:{size:10}}},
+    type: 'line',
+    data: { labels, datasets: [{ label: 'TiL Balance (hrs)', data,
+      borderColor: '#2147f4', backgroundColor: 'rgba(33,71,244,0.06)',
+      borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#2147f4',
+      tension: 0.3, fill: true }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#a8aabb', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#a8aabb', font: { size: 10 } } },
       },
     },
   };
@@ -1130,55 +1223,55 @@ function setFilter(f, el) {
 }
 
 function renderTable() {
-  let rows = [...entries].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  if (activeFilter==='earned')  rows = rows.filter(e=>e.tilTaken!=='Y');
-  if (activeFilter==='taken')   rows = rows.filter(e=>e.tilTaken==='Y');
-  if (activeFilter==='pending') rows = rows.filter(e=>e.approvalStatus==='Pending');
+  let rows = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+  if (activeFilter === 'earned')  rows = rows.filter(e => e.tilTaken !== 'Y');
+  if (activeFilter === 'taken')   rows = rows.filter(e => e.tilTaken === 'Y');
+  if (activeFilter === 'pending') rows = rows.filter(e => e.approvalStatus === 'Pending');
 
   const tbody = document.getElementById('entriesTbody');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div>No entries found</div></td></tr>`;
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div>No entries found</div></td></tr>';
     return;
   }
 
   tbody.innerHTML = rows.map(e => {
-    const isTaken   = e.tilTaken === 'Y';
-    const typeBadge = isTaken
-      ? `<span class="badge badge-taken">Taken</span>`
-      : `<span class="badge badge-earned">Earned</span>`;
+    const isTaken     = e.tilTaken === 'Y';
+    const typeBadge   = isTaken
+      ? '<span class="badge badge-taken">Taken</span>'
+      : '<span class="badge badge-earned">Earned</span>';
     const statusBadge = e.approvalStatus === 'Approved'
-      ? `<span class="badge badge-approved">&#10003; Approved</span>`
-      : `<span class="badge badge-pending">&#9679; Pending</span>`;
+      ? '<span class="badge badge-approved">✓ Approved</span>'
+      : '<span class="badge badge-pending">● Pending</span>';
     const approvedMeta = e.approvedBy
       ? `<div class="approval-meta">by ${e.approvedBy}</div>` : '';
-    const approveBtn = (isTaken && e.approvalStatus==='Pending')
+    const approveBtn = (isTaken && e.approvalStatus === 'Pending')
       ? `<button class="btn btn-approve btn-sm" onclick="openApprovalModal('${e.id}')">Approve</button>` : '';
     const deleteBtn = `<button class="btn-delete" onclick="deleteEntry('${e.id}')">Delete</button>`;
-    const dateStr   = e.date ? new Date(e.date+'T00:00:00').toLocaleDateString('en-GB') : '—';
+    const dateStr   = e.date ? new Date(e.date + 'T00:00:00').toLocaleDateString('en-GB') : '—';
     const dayStr    = e.day  ? `<span style="font-size:11px;color:var(--text--dark--30);"> ${e.day}</span>` : '';
 
     if (isTaken) {
       return `<tr>
         <td>${dateStr}${dayStr}</td>
         <td>${typeBadge}</td>
-        <td style="color:var(--text--dark--30)">${e.notes||'—'}</td>
+        <td style="color:var(--text--dark--30)">${e.notes || '—'}</td>
         <td style="color:var(--text--dark--20)">—</td>
         <td style="color:var(--text--dark--20)">—</td>
         <td style="color:var(--text--dark--20)">—</td>
         <td style="color:var(--text--dark--20)">—</td>
-        <td><span class="hours-neg">-${(e.hrsUsed||0).toFixed(2)} hrs</span></td>
+        <td><span class="hours-neg">-${(e.hrsUsed || 0).toFixed(2)} hrs</span></td>
         <td>${statusBadge}${approvedMeta}</td>
         <td><div class="td-actions">${approveBtn}${deleteBtn}</div></td>
       </tr>`;
     } else {
       return `<tr>
         <td>${dateStr}${dayStr}</td>
-        <td>${typeBadge}<div style="font-size:11px;color:var(--text--dark--30);margin-top:2px">${e.typeOfWork||''}</div></td>
-        <td>${e.client||'<span style="color:var(--text--dark--20)">—</span>'}</td>
-        <td>${e.totalHrs ? e.totalHrs.toFixed(2) : '—'}</td>
-        <td>${e.otHrs ? e.otHrs.toFixed(2) : '—'}</td>
-        <td>×${(e.multiplier||1).toFixed(1)}</td>
-        <td><span class="hours-pos">${e.tilEarned ? e.tilEarned.toFixed(2)+' hrs' : '—'}</span></td>
+        <td>${typeBadge}<div style="font-size:11px;color:var(--text--dark--30);margin-top:2px">${e.typeOfWork || ''}</div></td>
+        <td>${e.client || '<span style="color:var(--text--dark--20)">—</span>'}</td>
+        <td>${e.totalHrs ? Number(e.totalHrs).toFixed(2) : '—'}</td>
+        <td>${e.otHrs   ? Number(e.otHrs).toFixed(2)    : '—'}</td>
+        <td>×${(e.multiplier || 1).toFixed(1)}</td>
+        <td><span class="hours-pos">${e.tilEarned ? Number(e.tilEarned).toFixed(2) + ' hrs' : '—'}</span></td>
         <td style="color:var(--text--dark--20)">—</td>
         <td>${statusBadge}${approvedMeta}</td>
         <td><div class="td-actions">${deleteBtn}</div></td>
@@ -1197,17 +1290,17 @@ function showEmpty(msg) {
 // ═══════════════════════════════════════════════════════════════
 function setSyncState(state, label) {
   const dot = document.getElementById('syncDot');
-  dot.className = 'sync-dot ' + (state==='ok' ? 'ok' : state==='saving' ? 'saving' : 'error');
-  document.getElementById('syncLabel').innerHTML = label;
+  dot.className = 'sync-dot ' + (state === 'ok' ? 'ok' : state === 'saving' ? 'saving' : 'error');
+  document.getElementById('syncLabel').textContent = label;
 }
 
-function toast(msg, type='success') {
+function toast(msg, type = 'success') {
   const wrap = document.getElementById('toastWrap');
   const div  = document.createElement('div');
   div.className = `toast ${type}`;
   div.textContent = msg;
   wrap.appendChild(div);
-  setTimeout(()=>div.remove(), 3500);
+  setTimeout(() => div.remove(), 3500);
 }
 </script>
 </body>
