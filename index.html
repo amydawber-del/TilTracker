@@ -540,13 +540,9 @@ const LS_TRAINER   = 'til_trainer';
 const LS_CACHE     = 'til_v2_cache';
 const DAY_NAMES    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-// Trainers with default PINs — change these in localStorage key "til_pins" to override
-const TRAINERS = [
-  { name: 'Amy Dawber',    pin: '1234' },
-  { name: 'Max Hornby',    pin: '1234' },
-  { name: 'Matt Hinawski', pin: '1234' },
-  { name: 'Jess',          pin: '1234' },
-];
+// Trainers are loaded dynamically from the Users sheet (getUsers action).
+// This array is populated on page load — do not hardcode PINs here.
+let TRAINERS = [];  // { name, pin, role } — filled by loadUsersFromSheet()
 
 // ═══════════════════════════════════════════════════════════════
 // STATE
@@ -579,15 +575,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Check for saved session
-  const saved = localStorage.getItem(LS_TRAINER);
-  const trainer = saved ? TRAINERS.find(t => t.name === saved) : null;
-  if (trainer) {
-    loginSuccess(trainer.name);
-  } else {
-    showLoginScreen();
-  }
+  // Load users from sheet first, then check for saved session
+  loadUsersFromSheet().then(() => {
+    const saved   = localStorage.getItem(LS_TRAINER);
+    const trainer = saved ? TRAINERS.find(t => t.name === saved) : null;
+    if (trainer) {
+      loginSuccess(trainer.name);
+    } else {
+      showLoginScreen();
+    }
+  });
 });
+
+// ═══════════════════════════════════════════════════════════════
+// LOAD USERS FROM SHEET
+// Fetches the Users tab via getUsers and populates TRAINERS with
+// real names + PINs from col K. Only active trainers and admins
+// are included (they're the ones who use the TiL tracker).
+// ═══════════════════════════════════════════════════════════════
+async function loadUsersFromSheet() {
+  // Show a subtle loading state on the login sub-label
+  const subEl = document.getElementById('loginSub1');
+  if (subEl) subEl.textContent = 'Loading users…';
+
+  try {
+    const resp = await fetch(`${API_URL}?action=getUsers`);
+    const data = await resp.json();
+
+    if (data.success && data.users) {
+      // Only include active users who are trainers or admins
+      TRAINERS = data.users
+        .filter(u => u.active && (u.role === 'trainer' || u.role === 'admin'))
+        .map(u => ({
+          name: u.name,
+          pin:  u.pin || '',   // col K from the Users sheet
+          role: u.role,
+        }));
+    }
+  } catch (err) {
+    console.warn('Could not load users from sheet:', err.message);
+    // Fall back to a minimal list so the screen isn't broken
+    // PINs will be blank — user will see "No PIN set" message
+    TRAINERS = [];
+  }
+
+  if (subEl) subEl.textContent = 'Search for your name to continue';
+}
 
 // ═══════════════════════════════════════════════════════════════
 // LOGIN FLOW
@@ -676,16 +709,25 @@ function updatePinDisplay() {
 
 function checkPin() {
   const trainer = TRAINERS.find(t => t.name === loginSelectedTrainer);
-  // Load custom PINs from localStorage if set
-  let pins = {};
-  try { pins = JSON.parse(localStorage.getItem('til_pins') || '{}'); } catch {}
-  const correctPin = pins[loginSelectedTrainer] || trainer?.pin || '1234';
+
+  // PIN comes from col K of the Users sheet, loaded via getUsers on startup
+  const correctPin = trainer ? trainer.pin : '';
+
+  if (!correctPin) {
+    // No PIN set for this user in the sheet
+    document.getElementById('pinError').textContent = 'No PIN set — ask an admin to add one in the Users sheet (col K)';
+    setTimeout(() => {
+      pinEntry = '';
+      updatePinDisplay();
+      document.getElementById('pinError').textContent = '';
+    }, 2500);
+    return;
+  }
 
   if (pinEntry === correctPin) {
     loginSuccess(loginSelectedTrainer);
   } else {
-    // shake / error
-    for (let i=0;i<4;i++) document.getElementById('pd'+i).classList.add('error');
+    for (let i = 0; i < 4; i++) document.getElementById('pd'+i).classList.add('error');
     document.getElementById('pinError').textContent = 'Incorrect PIN — try again';
     setTimeout(() => {
       pinEntry = '';
@@ -718,8 +760,9 @@ function signOut() {
   entries = [];
   localStorage.removeItem(LS_TRAINER);
   if (chart) { chart.destroy(); chart = null; }
-  showLoginScreen();
   setSyncState('', 'Not signed in');
+  // Re-fetch users so PINs are always fresh when returning to login
+  loadUsersFromSheet().then(() => showLoginScreen());
 }
 
 // ═══════════════════════════════════════════════════════════════
