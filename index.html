@@ -426,8 +426,8 @@ tbody tr:hover td{background:var(--card-light-grey);}
           </div>
           <div class="form-row">
             <label>Standard Hours</label>
-            <input type="number" id="eStdHrs" value="7.5" min="0" step="0.5" oninput="calcTil()">
-            <div class="form-hint">Default 7.5 hrs</div>
+            <input type="number" id="eStdHrs" value="8" min="0" step="0.5" oninput="calcTil()">
+            <div class="form-hint">Default 8 hrs</div>
           </div>
         </div>
 
@@ -580,7 +580,9 @@ async function apiCall(params) {
 // ═══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   const today = new Date().toISOString().slice(0,10);
-  document.getElementById('eDate').value = today;
+  document.getElementById('eDate').value  = today;
+  document.getElementById('eStart').value = '09:30';
+  document.getElementById('eEnd').value   = '17:30';
   document.getElementById('tDate').value = today;
 
   document.addEventListener('click', ev => {
@@ -924,7 +926,7 @@ function calcHours() {
 
 function calcTil() {
   const total  = parseFloat(document.getElementById('eTotalHrs').value) || 0;
-  const std    = parseFloat(document.getElementById('eStdHrs').value)   || 7.5;
+  const std    = parseFloat(document.getElementById('eStdHrs').value)   || 8;
   const travel = parseFloat(document.getElementById('eTravel').value)   || 0;
   const bh     = document.getElementById('eBankHol').checked;
   const we     = document.getElementById('eWeekend').checked;
@@ -1000,7 +1002,7 @@ async function submitEntry() {
       if (!dateVal) { toast('Please select a date', 'error'); return; }
 
       const total  = parseFloat(document.getElementById('eTotalHrs').value) || 0;
-      const std    = parseFloat(document.getElementById('eStdHrs').value)   || 7.5;
+      const std    = parseFloat(document.getElementById('eStdHrs').value)   || 8;
       const travel = parseFloat(document.getElementById('eTravel').value)   || 0;
       const bh     = document.getElementById('eBankHol').checked;
       const we     = document.getElementById('eWeekend').checked;
@@ -1067,9 +1069,11 @@ async function submitEntry() {
 }
 
 function resetForm() {
-  ['eClient','eStart','eEnd','eNotes','eLocation','eTotalHrs','eTravel'].forEach(id => {
+  ['eClient','eNotes','eLocation','eTotalHrs','eTravel'].forEach(id => {
     document.getElementById(id).value = '';
   });
+  document.getElementById('eStart').value = '09:30';
+  document.getElementById('eEnd').value   = '17:30';
   document.getElementById('eBankHol').checked = false;
   document.getElementById('tNotes').value = '';
   onDateChange();
