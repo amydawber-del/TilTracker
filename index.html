@@ -535,20 +535,20 @@ tbody tr:hover td{background:#fafafa;}
           <div class="section-divider">Worked Hours</div>
           <div class="form-time-row">
             <div>
-              <label>Date *</label>
+              <label for="eDate">Date *</label>
               <input type="date" id="eDate" onchange="onDateChange()">
               <div class="form-hint" id="bhHint" style="display:none;"></div>
             </div>
-            <div><label>Start Time</label><input type="time" id="eStart" onchange="calcHours()"></div>
-            <div><label>End Time</label><input type="time" id="eEnd" onchange="calcHours()"></div>
+            <div><label for="eStart">Start Time</label><input type="time" id="eStart" onchange="calcHours()"></div>
+            <div><label for="eEnd">End Time</label><input type="time" id="eEnd" onchange="calcHours()"></div>
           </div>
           <div class="form-2col">
             <div class="form-row">
-              <label>Total Hours Worked</label>
+              <label for="eTotalHrs">Total Hours Worked</label>
               <input type="number" id="eTotalHrs" value="8" min="0" step="0.25" oninput="calcTil()">
             </div>
             <div class="form-row">
-              <label>Standard Hours</label>
+              <label for="eStdHrs">Standard Hours</label>
               <input type="number" id="eStdHrs" value="8" min="0" step="0.5" oninput="calcTil()">
               <div class="form-hint">Default 8 hrs</div>
             </div>
@@ -561,7 +561,7 @@ tbody tr:hover td{background:#fafafa;}
             <label class="check-label" id="weLabel"><input type="checkbox" id="eWeekend" onchange="calcTil()"> Weekend</label>
           </div>
           <div class="form-row">
-            <label>Travel Time (hrs) <span style="font-size:10px;color:var(--action-primary-blue);font-weight:700;">counts toward TiL</span></label>
+            <label for="eTravel">Travel Time (hrs) <span style="font-size:10px;color:var(--action-primary-blue);font-weight:700;">counts toward TiL</span></label>
             <input type="number" id="eTravel" placeholder="0" min="0" step="0.25" oninput="calcTil()">
           </div>
 
@@ -579,10 +579,10 @@ tbody tr:hover td{background:#fafafa;}
           </div>
 
           <div class="section-divider">Session Details</div>
-          <div class="form-row"><label>Client / Project *</label><input type="text" id="eClient" placeholder="e.g. Acorn Estates Ltd" oninput="checkDuplicate()"></div>
+          <div class="form-row"><label for="eClient">Client / Project *</label><input type="text" id="eClient" placeholder="e.g. Acorn Estates Ltd" oninput="checkDuplicate()"></div>
           <div class="form-2col">
             <div class="form-row">
-              <label>Type of Work</label>
+              <label for="eWorkType">Type of Work</label>
               <select id="eWorkType" onchange="onWorkTypeChange()">
                 <option value="">— Select —</option>
                 <option>Onsite Training</option>
@@ -597,11 +597,11 @@ tbody tr:hover td{background:#fafafa;}
               </select>
             </div>
             <div class="form-row">
-              <label>Location</label>
+              <label for="eLocation">Location</label>
               <input type="text" id="eLocation" placeholder="e.g. Client Site">
             </div>
           </div>
-          <div class="form-row"><label>Notes</label><textarea id="eNotes" placeholder="Optional context…"></textarea></div>
+          <div class="form-row"><label for="eNotes">Notes</label><textarea id="eNotes" placeholder="Optional context…"></textarea></div>
 
           <!-- Duplicate warning -->
           <div class="duplicate-warning" id="duplicateWarning">
@@ -613,10 +613,10 @@ tbody tr:hover td{background:#fafafa;}
         <div id="takenFields" style="display:none">
           <div class="section-divider">Time Off Details</div>
           <div class="form-2col">
-            <div class="form-row"><label>Date TiL Used *</label><input type="date" id="tDate"></div>
-            <div class="form-row"><label>Hours to Take *</label><input type="number" id="tHrs" min="0.25" step="0.25" value="7.5" oninput="updateTakenPreview()"></div>
+            <div class="form-row"><label for="tDate">Date TiL Used *</label><input type="date" id="tDate"></div>
+            <div class="form-row"><label for="tHrs">Hours to Take *</label><input type="number" id="tHrs" min="0.25" step="0.25" value="7.5" oninput="updateTakenPreview()"></div>
           </div>
-          <div class="form-row"><label>Notes / Reason</label><textarea id="tNotes" placeholder="e.g. Day off in lieu of 15 Jan go-live"></textarea></div>
+          <div class="form-row"><label for="tNotes">Notes / Reason</label><textarea id="tNotes" placeholder="e.g. Day off in lieu of 15 Jan go-live"></textarea></div>
           <div class="til-preview-box">
             <div class="til-preview-label">Balance Impact</div>
             <div class="til-preview-grid" style="margin-top:6px;">
@@ -1621,32 +1621,32 @@ function openEditModal(id, isAdminView) {
   let fields = '';
   if (isTaken) {
     fields = `
-      <div class="form-row"><label>Date TiL Used</label>
+      <div class="form-row"><label for="editDate">Date TiL Used</label>
         <input type="date" id="editDate" value="${entry.date||''}">
       </div>
-      <div class="form-row"><label>Hours to Take</label>
+      <div class="form-row"><label for="editHrs">Hours to Take</label>
         <input type="number" id="editHrs" step="0.25" value="${entry.hrsUsed||''}">
       </div>
-      <div class="form-row"><label>Notes</label>
+      <div class="form-row"><label for="editNotes">Notes</label>
         <textarea id="editNotes">${entry.notes||''}</textarea>
       </div>`;
   } else {
     fields = `
-      <div class="form-row"><label>Date</label>
+      <div class="form-row"><label for="editDate">Date</label>
         <input type="date" id="editDate" value="${entry.date||''}">
       </div>
       <div class="form-2col">
-        <div class="form-row"><label>Total Hours</label>
+        <div class="form-row"><label for="editTotalHrs">Total Hours</label>
           <input type="number" id="editTotalHrs" step="0.25" value="${entry.totalHrs||''}">
         </div>
-        <div class="form-row"><label>Travel Hours</label>
+        <div class="form-row"><label for="editTravel">Travel Hours</label>
           <input type="number" id="editTravel" step="0.25" value="${entry.travel||'0'}">
         </div>
       </div>
-      <div class="form-row"><label>Client / Project</label>
+      <div class="form-row"><label for="editClient">Client / Project</label>
         <input type="text" id="editClient" value="${entry.client||''}">
       </div>
-      <div class="form-row"><label>Notes</label>
+      <div class="form-row"><label for="editNotes">Notes</label>
         <textarea id="editNotes">${entry.notes||''}</textarea>
       </div>`;
   }
@@ -1793,15 +1793,19 @@ function closeModal() {
 }
 
 async function confirmApproval(approver) {
+  // Save IDs before closeModal() clears them to null
+  const idToApprove      = pendingApprovalId;
+  const trainerToApprove = pendingApprovalTrainer;
   closeModal();
+  if (!idToApprove) { toast('Approval failed: no entry selected', 'error'); return; }
   setSyncState('saving', 'Approving…');
   try {
-    const data = await apiCall({ action:'approveTilEntry', id:pendingApprovalId, approvedBy:approver });
+    const data = await apiCall({ action:'approveTilEntry', id:idToApprove, approvedBy:approver });
     if (!data.success) throw new Error(data.error);
     toast(`Approved by ${approver} ✓`, 'success');
     await loadFromSheet();
     if (currentView === 'admin' && selectedAdminTrainer) {
-      const refreshData = await apiCall({ action:'getTilLog', trainer: selectedAdminTrainer });
+      const refreshData = await apiCall({ action:'getTilLog', trainer: trainerToApprove || selectedAdminTrainer });
       if (refreshData.success) {
         allTrainerData[selectedAdminTrainer] = refreshData.entries || [];
         selectAdminTrainer(selectedAdminTrainer);
