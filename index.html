@@ -1294,11 +1294,11 @@ function calcBalanceFor(ents) {
   let accrued = 0, taken = 0, travel = 0;
   for (const e of ents) {
     if (e.tilTaken === 'Y') {
-      if (e.approvalStatus === 'Approved') taken += e.hrsUsed || 0;
+      if (e.approvalStatus === 'Approved') taken += parseFloat(e.hrsUsed) || 0;
     } else {
       if (e.approvalStatus === 'Approved') {
-        accrued += e.tilEarned || 0;
-        travel  += e.travel    || 0;
+        accrued += parseFloat(e.tilEarned) || 0;
+        travel  += parseFloat(e.travel)    || 0;
       }
     }
   }
@@ -1959,7 +1959,7 @@ function renderChart() {
   const labels = [], data = [], entryRefs = [];
 
   for (const e of approved) {
-    running += e.tilTaken === 'Y' ? -(e.hrsUsed||0) : (e.tilEarned||0);
+    running += e.tilTaken === 'Y' ? -(parseFloat(e.hrsUsed)||0) : (parseFloat(e.tilEarned)||0);
     const d = e.date ? new Date(e.date+'T00:00:00') : null;
     labels.push(d ? d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : '');
     data.push(parseFloat(running.toFixed(2)));
@@ -1975,7 +1975,7 @@ function renderChart() {
       let pr = running;
       const pLabels = [...labels], pData = [...data];
       for (const e of pending) {
-        pr -= (e.hrsUsed || 0);
+        pr -= (parseFloat(e.hrsUsed) || 0);
         const d = e.date ? new Date(e.date+'T00:00:00') : null;
         pLabels.push(d ? d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : '');
         pData.push(parseFloat(pr.toFixed(2)));
