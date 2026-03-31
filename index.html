@@ -1297,8 +1297,18 @@ function calcBalanceFor(ents) {
       if (e.approvalStatus === 'Approved') taken += parseFloat(e.hrsUsed) || 0;
     } else {
       if (e.approvalStatus === 'Approved') {
-        accrued += parseFloat(e.tilEarned) || 0;
-        travel  += parseFloat(e.travel)    || 0;
+        // tilEarned may come back as blank/dash from the sheet — compute from components as fallback
+        let earned = parseFloat(e.tilEarned);
+        if (!isFinite(earned) || isNaN(earned)) {
+          const otHrs  = parseFloat(e.otHrs)      || 0;
+          const mult   = parseFloat(e.multiplier)  || 1;
+          const trv    = parseFloat(e.travel)      || 0;
+          earned = parseFloat(((otHrs * mult) + trv).toFixed(2));
+          // Patch the entry so the table display also shows the correct value
+          e.tilEarned = earned.toFixed(2);
+        }
+        accrued += earned;
+        travel  += parseFloat(e.travel) || 0;
       }
     }
   }
@@ -1891,7 +1901,7 @@ function buildEntryRow(e, isAdminView) {
       <td>${e.totalHrs ? Number(e.totalHrs).toFixed(2) : '—'}</td>
       <td>${e.otHrs   ? Number(e.otHrs).toFixed(2)    : '—'}</td>
       <td>×${(e.multiplier||1).toFixed(1)}</td>
-      <td><span class="hours-pos">${e.tilEarned ? Number(e.tilEarned).toFixed(2)+' hrs' : '—'}</span></td>
+      <td><span class="hours-pos">${(()=>{ let v=parseFloat(e.tilEarned); if(!isFinite(v)||isNaN(v)){ const ot=parseFloat(e.otHrs)||0,m=parseFloat(e.multiplier)||1,tr=parseFloat(e.travel)||0; v=parseFloat(((ot*m)+tr).toFixed(2)); } return v>0 ? v.toFixed(2)+' hrs' : '—'; })()}</span></td>
       <td style="color:var(--text--dark--20)">—</td>
       <td>${statusBadge}${approvedMeta}</td>
       <td><div class="td-actions">${editBtn}${deleteBtn}</div></td>
