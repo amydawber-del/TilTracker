@@ -578,6 +578,14 @@ tbody tr:hover td{background:#fafafa;}
             </div>
           </div>
 
+          <!-- Admin-only: log on behalf of another trainer -->
+          <div class="form-row" id="loggingForRow" style="display:none;">
+            <label for="eLoggingFor">Logging for <span style="font-size:10px;font-weight:700;color:var(--action-primary-blue);text-transform:uppercase;letter-spacing:.05em;">Admin</span></label>
+            <select id="eLoggingFor" style="border-color:var(--accent--blue--300);">
+            </select>
+            <div class="form-hint">Defaults to you — change when logging on behalf of a trainer you're shadowing</div>
+          </div>
+
           <div class="section-divider">Session Details</div>
           <div class="form-row"><label for="eClient">Client / Project *</label><input type="text" id="eClient" placeholder="e.g. Acorn Estates Ltd" oninput="checkDuplicate()"></div>
           <div class="form-2col">
@@ -1048,6 +1056,14 @@ function doLoginSuccess(name) {
 
   if (isAdmin(currentUser)) {
     document.getElementById('viewTabs').style.display = 'flex';
+    // Show "Logging for" dropdown and populate with all non-viewer users
+    const loggingForRow = document.getElementById('loggingForRow');
+    const loggingForSel = document.getElementById('eLoggingFor');
+    loggingForRow.style.display = '';
+    loggingForSel.innerHTML = USERS
+      .filter(u => u.role !== 'viewer')
+      .map(u => `<option value="${u.name}"${u.name === name ? ' selected' : ''}>${u.name}${u.name === name ? ' (you)' : ''}</option>`)
+      .join('');
   }
 
   onDateChange();
@@ -1520,6 +1536,12 @@ async function submitEntry() {
     const name = currentUser && currentUser.name;
     if (!name) throw new Error('No user logged in');
 
+    // Admin may be logging on behalf of another trainer (shadowing)
+    const loggingForSel = document.getElementById('eLoggingFor');
+    const trainerName = (loggingForSel && loggingForSel.closest('#loggingForRow') && loggingForSel.closest('#loggingForRow').style.display !== 'none')
+      ? (loggingForSel.value || name)
+      : name;
+
     let params;
     if (currentType === 'earned') {
       const dateVal = document.getElementById('eDate').value;
@@ -1533,7 +1555,7 @@ async function submitEntry() {
       const mult   = (bh && we) ? 2.0 : (bh || we) ? 1.5 : 1.0;
       const earned = parseFloat(((otHrs * mult) + travel).toFixed(2));
       params = {
-        action:'saveTilEntry', trainer:name,
+        action:'saveTilEntry', trainer:trainerName,
         date:dateVal, day:getDay(dateVal),
         client:document.getElementById('eClient').value,
         typeOfWork:document.getElementById('eWorkType').value,
@@ -1566,7 +1588,8 @@ async function submitEntry() {
     setSyncState('saving', 'Saving…');
     const data = await apiCall(params);
     if (!data.success) throw new Error(data.error || 'Save failed');
-    toast('Entry saved ✓', 'success');
+    const savedFor = trainerName !== name ? ` for ${trainerName}` : '';
+    toast(`Entry saved${savedFor} ✓`, 'success');
     resetForm();
     await loadFromSheet();
   } catch (err) {
@@ -1586,6 +1609,11 @@ function resetForm() {
   document.getElementById('tNotes').value = '';
   document.getElementById('negativeBalanceWarning').classList.remove('visible');
   document.getElementById('duplicateWarning').classList.remove('visible');
+  // Reset "Logging for" back to the logged-in admin after each save
+  const loggingForSel = document.getElementById('eLoggingFor');
+  if (loggingForSel && currentUser) {
+    loggingForSel.value = currentUser.name;
+  }
   onDateChange();
   updateSubmitBtn();
 }
