@@ -136,7 +136,7 @@ header{background:var(--brand--black);height:56px;display:flex;align-items:cente
 .page-sub{font-size:13px;color:var(--text--dark--30);margin-top:2px;}
 
 /* ── KPI ROW ── */
-.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
 .kpi-card{background:#fff;border:1px solid var(--ui--underline--light-grey);border-radius:10px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,.04);position:relative;}
 .kpi-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text--dark--30);margin-bottom:7px;display:flex;align-items:center;gap:5px;}
 .kpi-value{font-size:26px;font-weight:700;line-height:1;letter-spacing:-.02em;font-family:var(--font-mono);}
@@ -493,16 +493,7 @@ tbody tr:hover td{background:#fafafa;}
         <div class="kpi-value amber" id="kpiPending">0</div>
         <div class="kpi-sub" id="kpiPendingSub">TiL taken entries</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">
-          Travel Time (Total)
-          <span class="tooltip-wrap">
-            <span class="tooltip-icon" data-tip="Travel time counts toward your accrued TiL balance">?</span>
-          </span>
-        </div>
-        <div class="kpi-value dark" id="kpiTravel">—</div>
-        <div class="kpi-sub">Counted in accrued</div>
-      </div>
+
     </div>
 
     <!-- MAIN GRID -->
@@ -532,82 +523,48 @@ tbody tr:hover td{background:#fafafa;}
 
         <!-- EARNED FORM -->
         <div id="earnedFields">
-          <div class="section-divider">Worked Hours</div>
-          <div class="form-time-row">
-            <div>
+          <div class="form-2col" style="margin-bottom:11px;">
+            <div class="form-row" style="margin-bottom:0;">
               <label for="eDate">Date *</label>
               <input type="date" id="eDate" onchange="onDateChange()">
-              <div class="form-hint" id="bhHint" style="display:none;"></div>
             </div>
-            <div><label for="eStart">Start Time</label><input type="time" id="eStart" onchange="calcHours()"></div>
-            <div><label for="eEnd">End Time</label><input type="time" id="eEnd" onchange="calcHours()"></div>
-          </div>
-          <div class="form-2col">
-            <div class="form-row">
-              <label for="eTotalHrs">Total Hours Worked</label>
-              <input type="number" id="eTotalHrs" value="8" min="0" step="0.25" oninput="calcTil()">
-            </div>
-            <div class="form-row">
-              <label for="eStdHrs">Standard Hours</label>
-              <input type="number" id="eStdHrs" value="8" min="0" step="0.5" oninput="calcTil()">
-              <div class="form-hint">Default 8 hrs</div>
+            <div class="form-row" style="margin-bottom:0;">
+              <label for="eTotalHrs">Hours Worked *</label>
+              <input type="number" id="eTotalHrs" value="7.5" min="0" step="0.25" oninput="calcTil()">
             </div>
           </div>
-
-          <div class="section-divider">Day Type &amp; Multiplier</div>
           <div class="flag-row" id="dayFlags"></div>
-          <div class="check-row">
-            <label class="check-label" id="bhLabel"><input type="checkbox" id="eBankHol" onchange="calcTil()"> Bank Holiday</label>
-            <label class="check-label" id="weLabel"><input type="checkbox" id="eWeekend" onchange="calcTil()"> Weekend</label>
-          </div>
-          <div class="form-row">
-            <label for="eTravel">Travel Time (hrs) <span style="font-size:10px;color:var(--action-primary-blue);font-weight:700;">counts toward TiL</span></label>
-            <input type="number" id="eTravel" placeholder="0" min="0" step="0.25" oninput="calcTil()">
-          </div>
+          <div class="form-hint" style="margin-bottom:10px;">These hours are added directly to your TiL balance — no multipliers applied.</div>
 
           <div class="til-preview-box">
             <div class="til-preview-label">TiL Earned Preview</div>
             <div class="til-preview-value" id="prevTilEarned">—</div>
             <div class="til-preview-calc" id="prevCalcString"></div>
-            <div class="til-preview-grid">
-              <div class="til-preview-row"><span>Overtime hrs</span><span id="prevOtHrs">—</span></div>
-              <div class="til-preview-row"><span>Multiplier</span><span id="prevMultiplier">—</span></div>
-            </div>
-            <div class="til-preview-travel-line" id="prevTravelLine" style="display:none;">
-              <span>✈ Travel time</span><span id="prevTravelVal">—</span>
-            </div>
           </div>
 
           <!-- Admin-only: log on behalf of another trainer -->
           <div class="form-row" id="loggingForRow" style="display:none;">
             <label for="eLoggingFor">Logging for <span style="font-size:10px;font-weight:700;color:var(--action-primary-blue);text-transform:uppercase;letter-spacing:.05em;">Admin</span></label>
-            <select id="eLoggingFor" style="border-color:var(--accent--blue--300);">
-            </select>
+            <select id="eLoggingFor" style="border-color:var(--accent--blue--300);"></select>
             <div class="form-hint">Defaults to you — change when logging on behalf of a trainer you're shadowing</div>
           </div>
 
           <div class="section-divider">Session Details</div>
           <div class="form-row"><label for="eClient">Client / Project *</label><input type="text" id="eClient" placeholder="e.g. Acorn Estates Ltd" oninput="checkDuplicate()"></div>
-          <div class="form-2col">
-            <div class="form-row">
-              <label for="eWorkType">Type of Work</label>
-              <select id="eWorkType" onchange="onWorkTypeChange()">
-                <option value="">— Select —</option>
-                <option>Onsite Training</option>
-                <option>Online Training</option>
-                <option>Accounting Go-Live</option>
-                <option>Evening Demo</option>
-                <option>Weekend Session</option>
-                <option>Bank Holiday Cover</option>
-                <option>Travel Day</option>
-                <option>Support Visit</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <div class="form-row">
-              <label for="eLocation">Location</label>
-              <input type="text" id="eLocation" placeholder="e.g. Client Site">
-            </div>
+          <div class="form-row">
+            <label for="eWorkType">Type of Work</label>
+            <select id="eWorkType">
+              <option value="">— Select —</option>
+              <option>Onsite Training</option>
+              <option>Online Training</option>
+              <option>Accounting Go-Live</option>
+              <option>Evening Demo</option>
+              <option>Weekend Session</option>
+              <option>Bank Holiday Cover</option>
+              <option>Travel Day</option>
+              <option>Support Visit</option>
+              <option>Other</option>
+            </select>
           </div>
           <div class="form-row"><label for="eNotes">Notes</label><textarea id="eNotes" placeholder="Optional context…"></textarea></div>
 
@@ -640,7 +597,7 @@ tbody tr:hover td{background:#fafafa;}
               <label for="negativeConfirmCheck">I understand this will put me into negative TiL and I accept responsibility for making it up.</label>
             </div>
           </div>
-          <div style="background:#fff8e1;border:1px solid #fde047;border-radius:6px;padding:9px 12px;margin-bottom:12px;font-size:12px;color:#854d0e;">
+          <div style="background:#EAE7FD;border:1px solid var(--accent--blue--300);border-radius:6px;padding:9px 12px;margin-bottom:12px;font-size:12px;color:#3a2fa0;">
             ⏳ TiL Taken requests require approval from an admin or manager.
           </div>
         </div>
@@ -669,11 +626,10 @@ tbody tr:hover td{background:#fafafa;}
         <table>
           <thead><tr>
             <th>Date</th><th>Type</th><th>Client / Work</th>
-            <th>Hrs Worked</th><th>Overtime</th><th>Multiplier</th>
-            <th>TiL Earned</th><th>Hrs Taken</th><th>Status</th><th>Actions</th>
+            <th>Hrs Worked</th><th>TiL Earned</th><th>Hrs Taken</th><th>Status</th><th>Actions</th>
           </tr></thead>
           <tbody id="entriesTbody">
-            <tr><td colspan="10"><div class="empty-state"><div class="empty-icon">⏱</div>Loading entries…</div></td></tr>
+            <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">⏱</div>Loading entries…</div></td></tr>
           </tbody>
         </table>
       </div>
@@ -737,8 +693,7 @@ tbody tr:hover td{background:#fafafa;}
           <table>
             <thead><tr>
               <th>Date</th><th>Type</th><th>Client / Work</th>
-              <th>Hrs Worked</th><th>Overtime</th><th>Multiplier</th>
-              <th>TiL Earned</th><th>Hrs Taken</th><th>Status</th><th>Actions</th>
+              <th>Hrs Worked</th><th>TiL Earned</th><th>Hrs Taken</th><th>Status</th><th>Actions</th>
             </tr></thead>
             <tbody id="adminEntriesTbody"></tbody>
           </table>
@@ -861,8 +816,6 @@ async function apiCall(params) {
 document.addEventListener('DOMContentLoaded', () => {
   const today = new Date().toISOString().slice(0,10);
   document.getElementById('eDate').value  = today;
-  document.getElementById('eStart').value = '09:30';
-  document.getElementById('eEnd').value   = '17:30';
   document.getElementById('tDate').value  = today;
 
   document.addEventListener('click', ev => {
@@ -1241,7 +1194,7 @@ function renderAdminEntries(ents) {
   if (adminFilter === 'pending') rows = rows.filter(e => e.approvalStatus === 'Pending');
   const tbody = document.getElementById('adminEntriesTbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div>No entries found</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div>No entries found</div></td></tr>';
     return;
   }
   tbody.innerHTML = rows.map(e => buildEntryRow(e, true)).join('');
@@ -1307,32 +1260,23 @@ function saveCache() {
 // CALCULATIONS
 // ═══════════════════════════════════════════════════════════════
 function calcBalanceFor(ents) {
-  let accrued = 0, taken = 0, travel = 0;
+  let accrued = 0, taken = 0;
   for (const e of ents) {
     if (e.tilTaken === 'Y') {
       if (e.approvalStatus === 'Approved') taken += parseFloat(e.hrsUsed) || 0;
     } else {
       if (e.approvalStatus === 'Approved') {
-        // tilEarned may come back as blank/dash from the sheet — compute from components as fallback
+        // tilEarned is authoritative; fall back to totalHrs for older/manually-entered data
         let earned = parseFloat(e.tilEarned);
         if (!isFinite(earned) || isNaN(earned)) {
-          const mult   = parseFloat(e.multiplier)  || 1;
-          const trv    = parseFloat(e.travel)      || 0;
-          // otHrs may also be blank (e.g. "Other" work type entries logged directly) — fall back to totalHrs
-          let otHrs = parseFloat(e.otHrs);
-          if (!isFinite(otHrs) || isNaN(otHrs)) {
-            otHrs = parseFloat(e.totalHrs) || 0;
-          }
-          earned = parseFloat(((otHrs * mult) + trv).toFixed(2));
-          // Patch the entry so the table display also shows the correct value
+          earned = parseFloat(e.totalHrs) || parseFloat(e.otHrs) || 0;
           e.tilEarned = earned.toFixed(2);
         }
         accrued += earned;
-        travel  += parseFloat(e.travel) || 0;
       }
     }
   }
-  return { balance: accrued - taken, accrued, taken, travel };
+  return { balance: accrued - taken, accrued, taken, travel: 0 };
 }
 function calcBalance() { return calcBalanceFor(entries); }
 
@@ -1340,26 +1284,10 @@ function getDay(dateStr) {
   if (!dateStr) return '';
   return DAY_NAMES[new Date(dateStr + 'T00:00:00').getDay()];
 }
-function calcHours() {
-  const s = document.getElementById('eStart').value;
-  const e = document.getElementById('eEnd').value;
-  if (!s || !e) return;
-  const [sh,sm] = s.split(':').map(Number);
-  const [eh,em] = e.split(':').map(Number);
-  const total = ((eh*60+em)-(sh*60+sm))/60;
-  if (total > 0) document.getElementById('eTotalHrs').value = total.toFixed(2);
-  calcTil();
-}
+
 
 function calcTil() {
-  const total  = parseFloat(document.getElementById('eTotalHrs').value) || 0;
-  const std    = parseFloat(document.getElementById('eStdHrs').value)   || 8;
-  const travel = parseFloat(document.getElementById('eTravel').value)   || 0;
-  const bh     = document.getElementById('eBankHol').checked;
-  const we     = document.getElementById('eWeekend').checked;
-  const otHrs  = Math.max(0, total - std);
-  const mult   = (bh && we) ? 2.0 : (bh || we) ? 1.5 : 1.0;
-  const earned = parseFloat(((otHrs * mult) + travel).toFixed(2));
+  const earned = parseFloat(document.getElementById('eTotalHrs').value) || 0;
 
   // Animate value change
   const valEl = document.getElementById('prevTilEarned');
@@ -1368,31 +1296,9 @@ function calcTil() {
   valEl.classList.add('animate');
 
   valEl.textContent = earned ? `${earned.toFixed(2)} hrs` : '—';
-  document.getElementById('prevOtHrs').textContent      = otHrs  ? `${otHrs.toFixed(2)} hrs`  : '—';
-  document.getElementById('prevMultiplier').textContent = `×${mult.toFixed(1)}`;
-
-  // Improvement #3: calc string
-  const calcEl = document.getElementById('prevCalcString');
-  if (earned) {
-    let parts = [];
-    if (otHrs > 0) parts.push(`(${otHrs.toFixed(2)} OT × ${mult.toFixed(1)})`);
-    if (travel > 0) parts.push(`${travel.toFixed(2)} travel`);
-    calcEl.textContent = parts.length ? parts.join(' + ') + ` = ${earned.toFixed(2)} hrs` : '';
-  } else {
-    calcEl.textContent = 'No overtime above standard hours';
-  }
-
-  // Travel line
-  const travelLine = document.getElementById('prevTravelLine');
-  if (travel > 0) {
-    travelLine.style.display = 'flex';
-    document.getElementById('prevTravelVal').textContent = `+${travel.toFixed(2)} hrs`;
-  } else {
-    travelLine.style.display = 'none';
-  }
+  document.getElementById('prevCalcString').textContent = earned ? `${earned.toFixed(2)} hrs added to your balance` : '';
 }
 
-// Improvement #2: Auto-detect BH & weekend, lock checkboxes unless admin
 function onDateChange() {
   const dateVal = document.getElementById('eDate').value;
   const day     = getDay(dateVal);
@@ -1400,30 +1306,7 @@ function onDateChange() {
   const isBH    = UK_BANK_HOLIDAYS.has(dateVal);
   const bhName  = BH_NAMES[dateVal] || '';
 
-  // Set checkbox state
-  document.getElementById('eWeekend').checked  = isWE;
-  document.getElementById('eBankHol').checked  = isBH;
-
-  // Lock/unlock based on admin
-  const canOverride = isAdmin(currentUser);
-  isAdminLockedWE = isWE && !canOverride;
-  isAdminLockedBH = isBH && !canOverride;
-  document.getElementById('eWeekend').disabled = isAdminLockedWE;
-  document.getElementById('eBankHol').disabled = isAdminLockedBH;
-  document.getElementById('weLabel').classList.toggle('locked', isAdminLockedWE);
-  document.getElementById('bhLabel').classList.toggle('locked', isAdminLockedBH);
-
-  // BH hint
-  const bhHint = document.getElementById('bhHint');
-  if (isBH) {
-    bhHint.textContent = `🏛️ ${bhName} — auto-detected`;
-    bhHint.className = 'form-hint bh-detected';
-    bhHint.style.display = 'block';
-  } else {
-    bhHint.style.display = 'none';
-  }
-
-  // Day flags
+  // Day flags — informational only, no multiplier effect
   const flags = document.getElementById('dayFlags');
   flags.innerHTML = '';
   if (day) { const c = document.createElement('div'); c.className='flag-chip'; c.textContent=day; flags.appendChild(c); }
@@ -1434,28 +1317,8 @@ function onDateChange() {
   checkDuplicate();
 }
 
-// Improvement #12: Smart defaults based on work type
 function onWorkTypeChange() {
-  const wt = document.getElementById('eWorkType').value;
-  const canOverride = isAdmin(currentUser);
-  if (wt === 'Weekend Session') {
-    document.getElementById('eWeekend').checked = true;
-    document.getElementById('eWeekend').disabled = !canOverride;
-    document.getElementById('weLabel').classList.toggle('locked', !canOverride);
-    calcTil();
-    toast('Weekend multiplier applied ✓', 'success');
-  } else if (wt === 'Bank Holiday Cover') {
-    document.getElementById('eBankHol').checked = true;
-    document.getElementById('eBankHol').disabled = !canOverride;
-    document.getElementById('bhLabel').classList.toggle('locked', !canOverride);
-    calcTil();
-    toast('Bank holiday multiplier applied ✓', 'success');
-  } else if (wt === 'Travel Day') {
-    document.getElementById('eTravel').value = '7.5';
-    document.getElementById('eTotalHrs').value = '7.5';
-    calcTil();
-    toast('Travel day defaults applied ✓', 'success');
-  }
+  // No multiplier logic — all hours earned 1:1 regardless of work type
 }
 
 // Improvement #4: Negative balance warning
@@ -1551,27 +1414,19 @@ async function submitEntry() {
       const dateVal = document.getElementById('eDate').value;
       if (!dateVal) { toast('Please select a date', 'error'); return; }
       const total  = parseFloat(document.getElementById('eTotalHrs').value) || 0;
-      const std    = parseFloat(document.getElementById('eStdHrs').value)   || 8;
-      const travel = parseFloat(document.getElementById('eTravel').value)   || 0;
-      const bh     = document.getElementById('eBankHol').checked;
-      const we     = document.getElementById('eWeekend').checked;
-      const otHrs  = Math.max(0, total - std);
-      const mult   = (bh && we) ? 2.0 : (bh || we) ? 1.5 : 1.0;
-      const earned = parseFloat(((otHrs * mult) + travel).toFixed(2));
+      if (!total) { toast('Please enter hours worked', 'error'); return; }
       params = {
         action:'saveTilEntry', trainer:trainerName,
         date:dateVal, day:getDay(dateVal),
         client:document.getElementById('eClient').value,
         typeOfWork:document.getElementById('eWorkType').value,
-        location:document.getElementById('eLocation').value,
-        startTime:document.getElementById('eStart').value,
-        endTime:document.getElementById('eEnd').value,
-        totalHrs:total.toFixed(2), stdHrs:std.toFixed(2),
-        otHrs:otHrs.toFixed(2), bankHol:bh?'Y':'N', weekend:we?'Y':'N',
-        travel:travel.toFixed(2), multiplier:mult.toFixed(1),
-        tilEarned:earned.toFixed(2), approvalStatus:'Approved',
+        totalHrs:total.toFixed(2), stdHrs:'0',
+        otHrs:total.toFixed(2), bankHol:'N', weekend:'N',
+        travel:'0', multiplier:'1.0',
+        tilEarned:total.toFixed(2), approvalStatus:'Approved',
         tilTaken:'N', dateUsed:'', hrsUsed:'0',
         notes:document.getElementById('eNotes').value,
+        location:'', startTime:'', endTime:'',
       };
     } else {
       const dateVal = document.getElementById('tDate').value;
@@ -1605,11 +1460,9 @@ async function submitEntry() {
 }
 
 function resetForm() {
-  ['eClient','eNotes','eLocation','eTravel'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('eTotalHrs').value = '8';
-  document.getElementById('eStart').value    = '09:30';
-  document.getElementById('eEnd').value      = '17:30';
-  document.getElementById('eBankHol').checked = false;
+  ['eClient','eNotes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('eTotalHrs').value = '7.5';
+  document.getElementById('eWorkType').value = '';
   document.getElementById('tNotes').value = '';
   document.getElementById('negativeBalanceWarning').classList.remove('visible');
   document.getElementById('duplicateWarning').classList.remove('visible');
@@ -1919,8 +1772,8 @@ function buildEntryRow(e, isAdminView) {
       <td>${dateStr}${dayStr}</td>
       <td>${typeBadge}</td>
       <td style="color:var(--text--dark--30)">${e.notes||'—'}</td>
-      <td style="color:var(--text--dark--20)">—</td><td style="color:var(--text--dark--20)">—</td>
-      <td style="color:var(--text--dark--20)">—</td><td style="color:var(--text--dark--20)">—</td>
+      <td style="color:var(--text--dark--20)">—</td>
+      <td style="color:var(--text--dark--20)">—</td>
       <td><span class="hours-neg">-${(e.hrsUsed||0).toFixed(2)} hrs</span></td>
       <td>${statusBadge}${approvedMeta}</td>
       <td><div class="td-actions">${approveBtn}${editBtn}${deleteBtn}</div></td>
@@ -1930,10 +1783,8 @@ function buildEntryRow(e, isAdminView) {
       <td>${dateStr}${dayStr}</td>
       <td>${typeBadge}<div style="font-size:11px;color:var(--text--dark--30);margin-top:2px">${e.typeOfWork||''}</div></td>
       <td>${e.client||'<span style="color:var(--text--dark--20)">—</span>'}</td>
-      <td>${e.totalHrs ? Number(e.totalHrs).toFixed(2) : '—'}</td>
-      <td>${e.otHrs   ? Number(e.otHrs).toFixed(2)    : '—'}</td>
-      <td>×${(e.multiplier||1).toFixed(1)}</td>
-      <td><span class="hours-pos">${(()=>{ let v=parseFloat(e.tilEarned); if(!isFinite(v)||isNaN(v)){ let ot=parseFloat(e.otHrs); if(!isFinite(ot)||isNaN(ot)) ot=parseFloat(e.totalHrs)||0; const m=parseFloat(e.multiplier)||1,tr=parseFloat(e.travel)||0; v=parseFloat(((ot*m)+tr).toFixed(2)); } return v>0 ? v.toFixed(2)+' hrs' : '—'; })()}</span></td>
+      <td>${e.totalHrs ? Number(e.totalHrs).toFixed(2)+' hrs' : '—'}</td>
+      <td><span class="hours-pos">${(()=>{ let v=parseFloat(e.tilEarned); if(!isFinite(v)||isNaN(v)){ v=parseFloat(e.totalHrs)||parseFloat(e.otHrs)||0; } return v>0 ? v.toFixed(2)+' hrs' : '—'; })()}</span></td>
       <td style="color:var(--text--dark--20)">—</td>
       <td>${statusBadge}${approvedMeta}</td>
       <td><div class="td-actions">${editBtn}${deleteBtn}</div></td>
@@ -1991,7 +1842,6 @@ function renderKPIs() {
   document.getElementById('kpiTakenSub').textContent    = `${takenCount} approved entries`;
   document.getElementById('kpiPending').textContent    = String(pendingCount);
   document.getElementById('kpiPendingSub').textContent  = pendingCount ? `${pendingCount} awaiting sign-off` : 'All up to date';
-  document.getElementById('kpiTravel').textContent     = travel.toFixed(2)+' hrs';
   document.getElementById('pageSub').textContent       = `Time in Lieu balance — ${balance.toFixed(2)} hrs available`;
 }
 
@@ -2104,7 +1954,7 @@ function renderTable() {
   if (activeFilter === 'pending') rows = rows.filter(e => e.approvalStatus === 'Pending');
   const tbody = document.getElementById('entriesTbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div>No entries found</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div>No entries found</div></td></tr>';
     return;
   }
   tbody.innerHTML = rows.map(e => buildEntryRow(e, false)).join('');
@@ -2112,7 +1962,7 @@ function renderTable() {
 
 function showEmpty(msg) {
   document.getElementById('entriesTbody').innerHTML =
-    `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">⚠️</div>${msg}</div></td></tr>`;
+    `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">⚠️</div>${msg}</div></td></tr>`;
 }
 
 // ═══════════════════════════════════════════════════════════════
