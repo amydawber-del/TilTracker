@@ -1159,6 +1159,7 @@ function renderAdminSummary(results) {
   tbody.innerHTML = results.map(({ user, entries: ents }) => {
     const stats    = calcBalanceFor(ents);
     const pending  = ents.filter(e => e.approvalStatus === 'Pending').length;
+    const initials = user.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const balCls   = stats.balance < 0 ? 'hours-neg' : 'hours-pos';
     const usagePct = stats.accrued > 0 ? Math.round((stats.taken / stats.accrued) * 100) : (stats.taken > 0 ? 100 : 0);
     const health   = getHealthStatus(stats);
