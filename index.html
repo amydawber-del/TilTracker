@@ -736,6 +736,7 @@ tbody tr:hover td{background:#fafafa;}
 // CONFIG
 // ═══════════════════════════════════════════════════════════════
 const API_URL    = 'https://script.google.com/macros/s/AKfycbzCvBhFSPyyoaVsui0DCxvGQQa0V7e_UCJ5LfqvcSysTHTFlNRcx4ewlET5TyouJ0ZYow/exec';
+const NOTIFY_EMAIL = 'aaaalnnnx2mlkff5mzsfknppxm@agentsoftware.slack.com'; // Amy Dawber (Slack)
 const LS_TRAINER = 'til_trainer';
 const LS_CACHE   = 'til_v3_cache';
 const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1474,6 +1475,28 @@ function setType(type) {
 // ═══════════════════════════════════════════════════════════════
 // SUBMIT
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// EMAIL NOTIFICATIONS — fires via GAS MailApp
+// ═══════════════════════════════════════════════════════════════
+async function sendTilNotificationEmail({ type, trainerName, date, hours, approvedBy }) {
+  try {
+    const dateFormatted = date ? new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) : '—';
+    let subject, body;
+    if (type === 'request') {
+      subject = `⏳ TiL Taken Request — ${trainerName}`;
+      body = `A new TiL Taken request has been submitted and is awaiting your approval.\n\nTrainer: ${trainerName}\nDate: ${dateFormatted}\nHours: ${hours} hrs\n\nPlease log in to the TiL Tracker to approve or decline this request.`;
+    } else if (type === 'approved') {
+      subject = `✅ TiL Request Approved — ${trainerName}`;
+      body = `A TiL Taken request has been approved.\n\nTrainer: ${trainerName}\nDate: ${dateFormatted}\nHours: ${hours} hrs\nApproved by: ${approvedBy}\n\nThis has been updated in the TiL Tracker.`;
+    } else if (type === 'cancelled') {
+      subject = `❌ TiL Request Cancelled — ${trainerName}`;
+      body = `A TiL Taken request has been cancelled/deleted.\n\nTrainer: ${trainerName}\nDate: ${dateFormatted}\nHours: ${hours} hrs\n\nThis entry has been removed from the TiL Tracker.`;
+    }
+    // Fire-and-forget via GAS — don't block the UI on this
+    apiCall({ action: 'notifyTilEmail', to: NOTIFY_EMAIL, subject, body }).catch(() => {});
+  } catch (_) { /* silent fail — notification is non-critical */ }
+}
+
 async function submitEntry() {
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
@@ -1527,6 +1550,15 @@ async function submitEntry() {
     if (!data.success) throw new Error(data.error || 'Save failed');
     const savedFor = trainerName !== name ? ` for ${trainerName}` : '';
     toast(`Entry saved${savedFor} ✓`, 'success');
+    // Notify Amy when a TiL Taken request is submitted
+    if (currentType === 'taken') {
+      sendTilNotificationEmail({
+        type: 'request',
+        trainerName: trainerName,
+        date: params.dateUsed,
+        hours: params.hrsUsed,
+      });
+    }
     resetForm();
     await loadFromSheet();
   } catch (err) {
@@ -1558,11 +1590,24 @@ function resetForm() {
 // ═══════════════════════════════════════════════════════════════
 async function deleteEntry(id) {
   if (!confirm('Delete this entry? It will be hidden but kept in the spreadsheet.')) return;
+  // Capture entry details before deletion for notification purposes
+  const allEnts = [...(entries || []), ...Object.values(allTrainerData).flat()];
+  const entryToDelete = allEnts.find(e => e.id === id);
+  const isPendingTaken = entryToDelete && entryToDelete.tilTaken === 'Y' && entryToDelete.approvalStatus === 'Pending';
   setSyncState('saving', 'Deleting…');
   try {
     const data = await apiCall({ action: 'deleteTilEntry', id });
     if (!data.success) throw new Error(data.error);
     toast('Entry deleted', 'success');
+    // Notify Amy if a pending TiL Taken request was cancelled/deleted
+    if (isPendingTaken && entryToDelete) {
+      sendTilNotificationEmail({
+        type: 'cancelled',
+        trainerName: entryToDelete.trainer || selectedAdminTrainer || (currentUser && currentUser.name) || 'Unknown',
+        date: entryToDelete.dateUsed || entryToDelete.date,
+        hours: entryToDelete.hrsUsed || '—',
+      });
+    }
     await loadFromSheet();
     if (currentView === 'admin' && selectedAdminTrainer) {
       const ents = allTrainerData[selectedAdminTrainer] || [];
@@ -1776,6 +1821,16 @@ async function confirmApproval(approver) {
     const data = await apiCall({ action:'approveTilEntry', id:idToApprove, approvedBy:approver });
     if (!data.success) throw new Error(data.error);
     toast(`Approved by ${approver} ✓`, 'success');
+    // Notify Amy that a request was approved
+    if (pendingApprovalEntry) {
+      sendTilNotificationEmail({
+        type: 'approved',
+        trainerName: trainerToApprove || (pendingApprovalEntry && pendingApprovalEntry.trainer) || 'Unknown',
+        date: pendingApprovalEntry.dateUsed || pendingApprovalEntry.date,
+        hours: pendingApprovalEntry.hrsUsed || pendingApprovalEntry.tilEarned || '—',
+        approvedBy: approver,
+      });
+    }
     await loadFromSheet();
     if (currentView === 'admin' && selectedAdminTrainer) {
       const refreshData = await apiCall({ action:'getTilLog', trainer: trainerToApprove || selectedAdminTrainer });
