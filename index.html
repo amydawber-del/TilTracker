@@ -552,7 +552,7 @@ tbody tr:hover td{background:#fafafa;}
             </div>
           </div>
           <div class="flag-row" id="dayFlags"></div>
-          <div class="form-hint" style="margin-bottom:10px;">These hours are added directly to your TiL balance — no multipliers applied.</div>
+          <div class="form-hint" id="earnedApprovalHint" style="margin-bottom:10px;">These hours are added directly to your TiL balance — no multipliers applied.</div>
 
           <div class="til-preview-box">
             <div class="til-preview-label">TiL Earned Preview</div>
@@ -1050,6 +1050,14 @@ function doLoginSuccess(name) {
     switchView('admin');
   }
 
+  // Update the TiL Earned form hint to reflect approval requirement for non-admins
+  const earnedHint = document.getElementById('earnedApprovalHint');
+  if (earnedHint) {
+    earnedHint.textContent = isAdmin(currentUser)
+      ? 'These hours are added directly to your TiL balance — no multipliers applied.'
+      : '⏳ TiL Earned entries require approval before they are added to your balance.';
+  }
+
   onDateChange();
   loadFromCache();
   loadFromSheet();
@@ -1118,7 +1126,7 @@ async function loadAllTrainers() {
 function updateAdminPendingBadge() {
   let total = 0;
   for (const name of Object.keys(allTrainerData)) {
-    total += (allTrainerData[name] || []).filter(e => e.tilTaken === 'Y' && e.approvalStatus === 'Pending').length;
+    total += (allTrainerData[name] || []).filter(e => e.approvalStatus === 'Pending').length;
   }
   const badge = document.getElementById('adminPendingBadge');
   if (total > 0) {
@@ -1150,8 +1158,7 @@ function renderAdminSummary(results) {
   }
   tbody.innerHTML = results.map(({ user, entries: ents }) => {
     const stats    = calcBalanceFor(ents);
-    const pending  = ents.filter(e => e.tilTaken === 'Y' && e.approvalStatus === 'Pending').length;
-    const initials = user.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const pending  = ents.filter(e => e.approvalStatus === 'Pending').length;
     const balCls   = stats.balance < 0 ? 'hours-neg' : 'hours-pos';
     const usagePct = stats.accrued > 0 ? Math.round((stats.taken / stats.accrued) * 100) : (stats.taken > 0 ? 100 : 0);
     const health   = getHealthStatus(stats);
@@ -1178,7 +1185,7 @@ function renderNextActions(results) {
   const actions = [];
   for (const { user, entries: ents } of results) {
     const stats   = calcBalanceFor(ents);
-    const pending = ents.filter(e => e.tilTaken === 'Y' && e.approvalStatus === 'Pending').length;
+    const pending = ents.filter(e => e.approvalStatus === 'Pending').length;
     if (stats.balance < 0)
       actions.push({ type: 'danger', msg: `<strong>${user.name}</strong> is at ${stats.balance.toFixed(1)} hrs — needs a recovery plan` });
     else if (pending > 0)
@@ -1214,7 +1221,9 @@ function selectAdminTrainer(name) {
   document.getElementById('nextTrainerBtn').disabled = idx < 0 || idx >= trainerOrder.length - 1;
 
   const stats  = calcBalanceFor(ents);
-  const pending = ents.filter(e => e.tilTaken === 'Y' && e.approvalStatus === 'Pending').length;
+  const pending = ents.filter(e => e.approvalStatus === 'Pending').length;
+  const pendingTaken  = ents.filter(e => e.tilTaken === 'Y' && e.approvalStatus === 'Pending').length;
+  const pendingEarned = ents.filter(e => e.tilTaken !== 'Y' && e.approvalStatus === 'Pending').length;
 
   document.getElementById('adminMiniKpis').innerHTML = `
     <div class="admin-kpi-card">
@@ -1233,13 +1242,17 @@ function selectAdminTrainer(name) {
     <div class="admin-kpi-card">
       <div class="kpi-label">Pending Approval</div>
       <div class="kpi-value ${pending > 0 ? 'amber' : 'dark'}" style="font-size:20px">${pending}</div>
+      ${pending > 0 ? `<div class="kpi-sub">${pendingEarned > 0 ? pendingEarned + ' earned' : ''}${pendingEarned > 0 && pendingTaken > 0 ? ', ' : ''}${pendingTaken > 0 ? pendingTaken + ' taken' : ''}</div>` : ''}
     </div>`;
 
   const alert = document.getElementById('adminPendingAlert');
   if (pending > 0) {
+    const parts = [];
+    if (pendingEarned > 0) parts.push(`${pendingEarned} TiL Earned ${pendingEarned === 1 ? 'entry' : 'entries'}`);
+    if (pendingTaken  > 0) parts.push(`${pendingTaken} TiL Taken ${pendingTaken === 1 ? 'request' : 'requests'}`);
     alert.style.display = 'flex';
     document.getElementById('adminPendingText').textContent =
-      `${pending} TiL Taken ${pending === 1 ? 'request requires' : 'requests require'} your approval`;
+      `${parts.join(' and ')} ${pending === 1 ? 'requires' : 'require'} your approval`;
   } else {
     alert.style.display = 'none';
   }
@@ -1478,13 +1491,16 @@ function setType(type) {
 // ═══════════════════════════════════════════════════════════════
 // EMAIL NOTIFICATIONS — fires via GAS MailApp
 // ═══════════════════════════════════════════════════════════════
-async function sendTilNotificationEmail({ type, trainerName, date, hours, approvedBy }) {
+async function sendTilNotificationEmail({ type, trainerName, date, hours, approvedBy, client, typeOfWork }) {
   try {
     const dateFormatted = date ? new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) : '—';
     let subject, body;
     if (type === 'request') {
       subject = `⏳ TiL Taken Request — ${trainerName}`;
       body = `A new TiL Taken request has been submitted and is awaiting your approval.\n\nTrainer: ${trainerName}\nDate: ${dateFormatted}\nHours: ${hours} hrs\n\nPlease log in to the TiL Tracker to approve or decline this request.`;
+    } else if (type === 'earned-request') {
+      subject = `⏳ TiL Earned Request — ${trainerName}`;
+      body = `A new TiL Earned entry has been submitted and is awaiting your approval before it is added to their balance.\n\nTrainer: ${trainerName}\nDate: ${dateFormatted}\nTiL Earned: ${hours} hrs${client ? `\nClient: ${client}` : ''}${typeOfWork ? `\nType of Work: ${typeOfWork}` : ''}\n\nPlease log in to the TiL Tracker to approve or decline this entry.`;
     } else if (type === 'approved') {
       subject = `✅ TiL Request Approved — ${trainerName}`;
       body = `A TiL Taken request has been approved.\n\nTrainer: ${trainerName}\nDate: ${dateFormatted}\nHours: ${hours} hrs\nApproved by: ${approvedBy}\n\nThis has been updated in the TiL Tracker.`;
@@ -1516,6 +1532,8 @@ async function submitEntry() {
       if (!dateVal) { toast('Please select a date', 'error'); return; }
       const total  = parseFloat(document.getElementById('eTotalHrs').value) || 0;
       if (!total) { toast('Please enter hours worked', 'error'); return; }
+      // Admins logging for themselves auto-approve; trainers go to Pending
+      const earnedStatus = isAdmin(currentUser) ? 'Approved' : 'Pending';
       params = {
         action:'saveTilEntry', trainer:trainerName,
         date:dateVal, day:getDay(dateVal),
@@ -1524,7 +1542,7 @@ async function submitEntry() {
         totalHrs:total.toFixed(2), stdHrs:'0',
         otHrs:total.toFixed(2), bankHol:'N', weekend:'N',
         travel:'0', multiplier:'1.0',
-        tilEarned:total.toFixed(2), approvalStatus:'Approved',
+        tilEarned:total.toFixed(2), approvalStatus:earnedStatus,
         tilTaken:'N', dateUsed:'', hrsUsed:'0',
         notes:document.getElementById('eNotes').value,
         location:'', startTime:'', endTime:'',
@@ -1557,6 +1575,17 @@ async function submitEntry() {
         trainerName: trainerName,
         date: params.dateUsed,
         hours: params.hrsUsed,
+      });
+    }
+    // Notify Amy when a trainer (non-admin) submits a TiL Earned entry for approval
+    if (currentType === 'earned' && !isAdmin(currentUser)) {
+      sendTilNotificationEmail({
+        type: 'earned-request',
+        trainerName: trainerName,
+        date: params.date,
+        hours: params.tilEarned,
+        client: params.client,
+        typeOfWork: params.typeOfWork,
       });
     }
     resetForm();
@@ -1593,19 +1622,20 @@ async function deleteEntry(id) {
   // Capture entry details before deletion for notification purposes
   const allEnts = [...(entries || []), ...Object.values(allTrainerData).flat()];
   const entryToDelete = allEnts.find(e => e.id === id);
-  const isPendingTaken = entryToDelete && entryToDelete.tilTaken === 'Y' && entryToDelete.approvalStatus === 'Pending';
+  const isPendingEntry = entryToDelete && entryToDelete.approvalStatus === 'Pending';
+  const isPendingEarned = isPendingEntry && entryToDelete.tilTaken !== 'Y';
   setSyncState('saving', 'Deleting…');
   try {
     const data = await apiCall({ action: 'deleteTilEntry', id });
     if (!data.success) throw new Error(data.error);
     toast('Entry deleted', 'success');
-    // Notify Amy if a pending TiL Taken request was cancelled/deleted
-    if (isPendingTaken && entryToDelete) {
+    // Notify Amy if a pending entry (taken or earned) was cancelled/deleted
+    if (isPendingEntry && entryToDelete) {
       sendTilNotificationEmail({
         type: 'cancelled',
         trainerName: entryToDelete.trainer || selectedAdminTrainer || (currentUser && currentUser.name) || 'Unknown',
-        date: entryToDelete.dateUsed || entryToDelete.date,
-        hours: entryToDelete.hrsUsed || '—',
+        date: isPendingEarned ? entryToDelete.date : (entryToDelete.dateUsed || entryToDelete.date),
+        hours: isPendingEarned ? (entryToDelete.tilEarned || '—') : (entryToDelete.hrsUsed || '—'),
       });
     }
     await loadFromSheet();
@@ -1839,10 +1869,10 @@ async function confirmApproval(approver) {
         selectAdminTrainer(selectedAdminTrainer);
         updateAdminPendingBadge();
         // Auto-advance to next trainer if no more pending
-        const stillPending = (allTrainerData[selectedAdminTrainer]||[]).filter(e => e.tilTaken==='Y' && e.approvalStatus==='Pending');
+        const stillPending = (allTrainerData[selectedAdminTrainer]||[]).filter(e => e.approvalStatus==='Pending');
         if (stillPending.length === 0) {
           const idx = trainerOrder.indexOf(selectedAdminTrainer);
-          const nextIdx = trainerOrder.findIndex((n, i) => i > idx && (allTrainerData[n]||[]).some(e => e.tilTaken==='Y' && e.approvalStatus==='Pending'));
+          const nextIdx = trainerOrder.findIndex((n, i) => i > idx && (allTrainerData[n]||[]).some(e => e.approvalStatus==='Pending'));
           if (nextIdx > -1) {
             setTimeout(() => {
               toast(`Moving to next trainer with pending: ${trainerOrder[nextIdx]}`, 'success');
@@ -1939,11 +1969,16 @@ function renderAll() {
 
 // Improvement #5: pending banner
 function renderPendingBanner() {
-  const pendingCount = entries.filter(e => e.tilTaken === 'Y' && e.approvalStatus === 'Pending').length;
+  const pendingTakenCount  = entries.filter(e => e.tilTaken === 'Y' && e.approvalStatus === 'Pending').length;
+  const pendingEarnedCount = entries.filter(e => e.tilTaken !== 'Y' && e.approvalStatus === 'Pending').length;
+  const pendingCount = pendingTakenCount + pendingEarnedCount;
   const banner = document.getElementById('myPendingBanner');
   if (pendingCount > 0) {
+    const parts = [];
+    if (pendingEarnedCount > 0) parts.push(`${pendingEarnedCount} TiL Earned ${pendingEarnedCount > 1 ? 'entries' : 'entry'}`);
+    if (pendingTakenCount  > 0) parts.push(`${pendingTakenCount} TiL Taken ${pendingTakenCount > 1 ? 'requests' : 'request'}`);
     document.getElementById('myPendingBannerText').textContent =
-      `You have ${pendingCount} TiL request${pendingCount > 1 ? 's' : ''} awaiting approval.`;
+      `You have ${parts.join(' and ')} awaiting approval.`;
     banner.style.display = 'flex';
   } else {
     banner.style.display = 'none';
@@ -1954,7 +1989,7 @@ function renderKPIs() {
   const { balance, accrued, taken, travel } = calcBalance();
   const approvedEarned = entries.filter(e => e.tilTaken !== 'Y' && e.approvalStatus === 'Approved').length;
   const takenCount     = entries.filter(e => e.tilTaken === 'Y'  && e.approvalStatus === 'Approved').length;
-  const pendingCount   = entries.filter(e => e.tilTaken === 'Y'  && e.approvalStatus === 'Pending').length;
+  const pendingCount   = entries.filter(e => e.approvalStatus === 'Pending').length;
 
   document.getElementById('kpiBalance').textContent    = balance.toFixed(2)+' hrs';
   document.getElementById('kpiBalance').className      = 'kpi-value '+(balance<0?'red':'blue');
